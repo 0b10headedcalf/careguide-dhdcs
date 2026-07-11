@@ -12,7 +12,6 @@ import {
   PathwayCard,
   PrimaryButton,
   QuestionCard,
-  ResourceCard,
   ReviewFlag,
   SecondaryButton,
   SidebarProgress,
@@ -22,6 +21,7 @@ import {
 } from "./FlowComponents";
 import { NearbyResourcesMap } from "@/components/maps/NearbyResourcesMap";
 import { AddressAutocomplete } from "@/components/maps/AddressAutocomplete";
+import { OfficialResourcesList } from "@/components/coverage/OfficialResourcesList";
 import { careGuideApi } from "@/lib/coverage/api";
 import {
   emptyCaseDraft,
@@ -801,10 +801,12 @@ export function HelpPage() {
         </div>
 
         <aside className="space-y-4">
-          <ResourceCard />
+          <h3 className="text-lg font-extrabold text-navy">Verified official sources</h3>
+          <OfficialResourcesList zip={zip} />
           <SourceDisclosure>
-            Results come live from Google Places for public offices and hospitals near the ZIP you
-            enter. Always confirm hours and services before visiting.
+            Verified results come from HRSA and DataSF (official public sources) through the
+            CareBridge backend. The map above adds supplemental Google Places markers for public
+            offices and hospitals. Always confirm hours and services before visiting.
           </SourceDisclosure>
         </aside>
       </section>
