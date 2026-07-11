@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.venv
+__pycache__
+*.tsbuildinfo
+.env
+.env*.local
+npm-debug.log*
+.DS_Store
+README.md

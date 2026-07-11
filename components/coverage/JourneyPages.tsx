@@ -20,6 +20,8 @@ import {
   VoiceOrb,
   VoiceTranscript
 } from "./FlowComponents";
+import { NearbyResourcesMap } from "@/components/maps/NearbyResourcesMap";
+import { AddressAutocomplete } from "@/components/maps/AddressAutocomplete";
 import { careGuideApi } from "@/lib/coverage/api";
 import {
   emptyCaseDraft,
@@ -582,14 +584,26 @@ export function ApplicationPage() {
         </div>
 
         <FormQuestion field={currentField}>
-          <label className="block">
-            <span className="text-sm font-extrabold text-navy">Answer</span>
-            <input
-              value={answer}
-              onChange={(event) => setAnswer(event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-4 text-base text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          {currentField.id === "zip" ? (
+            <AddressAutocomplete
+              label="Your address"
+              defaultValue={answer}
+              onSelect={(selected) => {
+                const value = selected.zip ?? "";
+                setAnswer(value);
+                updateCurrentField(value);
+              }}
             />
-          </label>
+          ) : (
+            <label className="block">
+              <span className="text-sm font-extrabold text-navy">Answer</span>
+              <input
+                value={answer}
+                onChange={(event) => setAnswer(event.target.value)}
+                className="mt-2 min-h-12 w-full rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-4 text-base text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              />
+            </label>
+          )}
 
           {voiceSuggestion ? (
             <div className="mt-5 rounded-[18px] border border-[#B9C9F8] bg-[#EAF0FF] p-4">
@@ -732,7 +746,6 @@ export function ReviewPage() {
 export function HelpPage() {
   const { draft } = useCaseDraft();
   const [zip, setZip] = useState("");
-  const [searched, setSearched] = useState(false);
 
   useEffect(() => {
     if (draft?.zip) {
@@ -762,7 +775,9 @@ export function HelpPage() {
                 className="mt-2 min-h-12 w-full rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-4 text-base text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
               />
             </label>
-            <PrimaryButton onClick={() => setSearched(true)}>Search verified resources</PrimaryButton>
+            <div className="mt-4">
+              <NearbyResourcesMap zip={zip} />
+            </div>
           </section>
 
           <section className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card sm:p-7">
@@ -787,12 +802,10 @@ export function HelpPage() {
 
         <aside className="space-y-4">
           <ResourceCard />
-          {searched ? (
-            <SourceDisclosure>
-              No resources are shown because no verified resource backend is connected yet. This
-              avoids displaying invented clinics, phone numbers, or addresses.
-            </SourceDisclosure>
-          ) : null}
+          <SourceDisclosure>
+            Results come live from Google Places for public offices and hospitals near the ZIP you
+            enter. Always confirm hours and services before visiting.
+          </SourceDisclosure>
         </aside>
       </section>
     </>

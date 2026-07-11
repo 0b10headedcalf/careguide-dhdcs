@@ -1,0 +1,30 @@
+# DigitalOcean App Platform spec for CareGuide (Next.js, Dockerfile build).
+# Create the app:  doctl apps create --spec .do/app.yaml
+# Update it later:  doctl apps update <APP_ID> --spec .do/app.yaml
+name: careguide
+region: nyc
+services:
+  - name: web
+    dockerfile_path: Dockerfile
+    source_dir: /
+    github:
+      repo: 0b10headedcalf/team-dhdcs
+      branch: frontend
+      deploy_on_push: true
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /
+    envs:
+      # NEXT_PUBLIC_* must exist at BUILD time to be inlined into the client
+      # bundle. RUN_AND_BUILD_TIME makes App Platform pass it as a docker
+      # --build-arg AND set it at runtime. The key is referrer-locked, so it
+      # is safe to ship in the bundle — but set the real value in the
+      # dashboard (Settings -> web -> Environment Variables) rather than here.
+      - key: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+        scope: RUN_AND_BUILD_TIME
+        value: AIzaSyDL1YdpBJQWEOM0RfJbZWbFjVKl80DF4UM
+      - key: NEXT_PUBLIC_API_BASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: http://localhost:8000
