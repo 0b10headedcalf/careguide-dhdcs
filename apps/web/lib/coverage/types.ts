@@ -21,10 +21,17 @@ export interface FormFieldValue {
   officialFieldLabel: string;
   plainLanguageLabel: string;
   value: string | number | boolean | null;
-  sourceType: "user" | "document" | "rule" | "agent_suggestion";
+  sourceType:
+    | "user"
+    | "document"
+    | "rule"
+    | "agent_suggestion"
+    | "agent_auto_confirmed"
+    | "official_api";
   confidence?: number;
   needsReview: boolean;
   explanation: string;
+  riskLevel?: "none" | "low" | "medium" | "high";
 }
 
 export interface PathwayPreview {

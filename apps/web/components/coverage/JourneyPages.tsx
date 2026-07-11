@@ -398,17 +398,39 @@ export function IntakeFlowPage() {
 export function ResultsPage() {
   const { draft, loaded } = useCaseDraft();
   const [preview, setPreview] = useState<PathwayPreview | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loaded || !draft) {
       return;
     }
-
-    careGuideApi.evaluatePathway(draft).then(setPreview);
+    setError(null);
+    careGuideApi
+      .evaluatePathway(draft)
+      .then(setPreview)
+      .catch((err: Error) => {
+        setError(err.message);
+      });
   }, [draft, loaded]);
 
   if (!loaded) {
     return <PageIntro title="Loading your pathway preview" />;
+  }
+
+  if (error) {
+    return (
+      <PageIntro
+        eyebrow="Backend error"
+        title="We could not reach the CareBridge backend"
+        text="The pathway engine is offline or misconfigured. This is a deployment problem, not something you did wrong. Retry, or continue the intake and try again shortly."
+      >
+        <p className="text-sm font-mono text-navy">{error}</p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <PrimaryButton onClick={() => window.location.reload()}>Retry</PrimaryButton>
+          <SecondaryButton href="/coverage/intake">Back to intake</SecondaryButton>
+        </div>
+      </PageIntro>
+    );
   }
 
   if (!draft || !preview) {
@@ -521,6 +543,7 @@ export function ApplicationPage() {
   const [fieldIndex, setFieldIndex] = useState(0);
   const [answer, setAnswer] = useState<string>("");
   const [voiceSuggestion, setVoiceSuggestion] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loaded) {
@@ -531,11 +554,16 @@ export function ApplicationPage() {
       router.replace("/coverage/intake");
       return;
     }
-
-    careGuideApi.mapFormFields(draft).then((mappedFields) => {
-      setFields(mappedFields);
-      setAnswer(mappedFields[0]?.value === null ? "" : String(mappedFields[0]?.value ?? ""));
-    });
+    setError(null);
+    careGuideApi
+      .mapFormFields(draft)
+      .then((mappedFields) => {
+        setFields(mappedFields);
+        setAnswer(mappedFields[0]?.value === null ? "" : String(mappedFields[0]?.value ?? ""));
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+      });
   }, [draft, loaded, router]);
 
   const currentField = fields[fieldIndex];
@@ -549,6 +577,22 @@ export function ApplicationPage() {
     setAnswer(currentField.value === null ? "" : String(currentField.value));
     setVoiceSuggestion(null);
   }, [currentField]);
+
+  if (error) {
+    return (
+      <PageIntro
+        eyebrow="Backend error"
+        title="We could not reach the CareBridge backend"
+        text="The application service is offline or misconfigured. This is a deployment problem. Retry or come back later."
+      >
+        <p className="text-sm font-mono text-navy">{error}</p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <PrimaryButton onClick={() => window.location.reload()}>Retry</PrimaryButton>
+          <SecondaryButton href="/coverage/intake">Back to intake</SecondaryButton>
+        </div>
+      </PageIntro>
+    );
+  }
 
   if (!loaded || !currentField) {
     return <PageIntro title="Preparing your form workspace" />;
@@ -679,18 +723,24 @@ export function ReviewPage() {
   const { draft, loaded } = useCaseDraft();
   const [fields, setFields] = useState<FormFieldValue[]>([]);
   const [flags, setFlags] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [passportStatus, setPassportStatus] = useState<"idle" | "generating" | "error">("idle");
 
   useEffect(() => {
     if (!loaded || !draft) {
       return;
     }
-
-    careGuideApi.mapFormFields(draft).then(async (mappedFields) => {
-      setFields(mappedFields);
-      const verification = await careGuideApi.verifyPacket(mappedFields);
-      setFlags(verification.flags);
-    });
+    setError(null);
+    careGuideApi
+      .mapFormFields(draft)
+      .then(async (mappedFields) => {
+        setFields(mappedFields);
+        const verification = await careGuideApi.verifyPacket(mappedFields);
+        setFlags(verification.flags);
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+      });
   }, [draft, loaded]);
 
   const handleGeneratePassport = async () => {
@@ -708,6 +758,22 @@ export function ReviewPage() {
 
   if (!loaded) {
     return <PageIntro title="Preparing your review" />;
+  }
+
+  if (error) {
+    return (
+      <PageIntro
+        eyebrow="Backend error"
+        title="We could not reach the CareBridge backend"
+        text="The review service is offline or misconfigured. This is a deployment problem. Retry or continue intake and come back later."
+      >
+        <p className="text-sm font-mono text-navy">{error}</p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <PrimaryButton onClick={() => window.location.reload()}>Retry</PrimaryButton>
+          <SecondaryButton href="/coverage/intake">Back to intake</SecondaryButton>
+        </div>
+      </PageIntro>
+    );
   }
 
   const ready = flags.length === 0 && fields.length > 0;

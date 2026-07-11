@@ -149,24 +149,55 @@ type EnvelopeOr<T> = ApiEnvelope<T> | ApiErrorEnvelope;
 // substitutes the mock, so the UI stays usable during a demo hiccup.
 const API_TIMEOUT_MS = 5000;
 
+export class ApiUnreachableError extends Error {
+  status: number;
+  path: string;
+  constructor(path: string, cause: string, status = 500) {
+    super(`Backend unreachable at ${path}: ${cause}`);
+    this.name = "ApiUnreachableError";
+    this.status = status;
+    this.path = path;
+  }
+}
+
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  let response: Response;
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
       headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
       signal: controller.signal
     });
-    const body = (await response.json()) as EnvelopeOr<T>;
-    if (!response.ok || "error" in body) {
-      const message = "error" in body ? body.error.message : `HTTP ${response.status}`;
-      throw new Error(message);
-    }
-    return body.data;
+  } catch (err) {
+    // Network error, DNS failure, refused connection, or AbortController timeout
+    // all land here. Normalize as a 500-class ApiUnreachableError so the UI can
+    // show one consistent "backend not reachable" state.
+    const cause =
+      err instanceof DOMException && err.name === "AbortError"
+        ? `timeout after ${API_TIMEOUT_MS}ms`
+        : err instanceof Error
+          ? err.message
+          : String(err);
+    throw new ApiUnreachableError(path, cause);
   } finally {
     clearTimeout(timer);
   }
+
+  let body: EnvelopeOr<T> | null = null;
+  try {
+    body = (await response.json()) as EnvelopeOr<T>;
+  } catch {
+    // Non-JSON response — treat as an unreachable/broken backend.
+    throw new ApiUnreachableError(path, `non-JSON response (HTTP ${response.status})`, response.status);
+  }
+  if (!response.ok || (body && "error" in body)) {
+    const message =
+      body && "error" in body ? body.error.message : `HTTP ${response.status}`;
+    throw new ApiUnreachableError(path, message, response.status);
+  }
+  return (body as ApiEnvelope<T>).data;
 }
 
 function readCachedCaseId(): string | null {
@@ -241,6 +272,48 @@ function pathwayToPreview(payload: {
   };
 }
 
+// Default form the review + application flows map against. The backend
+// field_mapper currently uses a shared FIELD_MAP regardless of form_id, so
+// this ID is stable — it just needs to exist in data/form_catalog.json.
+const DEFAULT_REVIEW_FORM_ID = "CCFRM604";
+
+type BackendMappedField = {
+  official_field_label: string;
+  canonical_field_name: string;
+  value: string | number | boolean | null;
+  source_type: string;
+  source_ref: string;
+  confidence: number;
+  needs_review: boolean;
+  risk_level: string;
+  explanation_simple: string;
+};
+
+const PLAIN_LANGUAGE_LABELS: Record<string, string> = {
+  "location.zip": "What ZIP code do you live in?",
+  "household.size": "How many people live in your household?",
+  "income.estimate": "What is your approximate household income?",
+  "income.frequency": "How often do you receive that income?",
+  "insurance.current_status": "What is your current health insurance status?",
+  "insurance.recent_coverage_loss": "Did you recently lose coverage?",
+  "employer.coverage_offer": "Do you currently get health insurance through a job?"
+};
+
+function mapBackendField(field: BackendMappedField): FormFieldValue {
+  const canonical = field.canonical_field_name;
+  return {
+    id: canonical.split(".").join("_"),
+    officialFieldLabel: field.official_field_label,
+    plainLanguageLabel: PLAIN_LANGUAGE_LABELS[canonical] ?? field.official_field_label,
+    value: field.value,
+    sourceType: field.source_type as FormFieldValue["sourceType"],
+    confidence: field.confidence,
+    needsReview: field.needs_review,
+    explanation: field.explanation_simple,
+    riskLevel: (field.risk_level || "low") as FormFieldValue["riskLevel"]
+  };
+}
+
 export const liveCareGuideApi: CareGuideApiClient = {
   async createCase() {
     const caseId = await ensureCaseId("en");
@@ -268,19 +341,49 @@ export const liveCareGuideApi: CareGuideApiClient = {
     return pathwayToPreview(result);
   },
 
-  // The remaining methods still route through the mock until wired individually.
   async routeForms() {
+    // Not surfaced in the current UI; leave stubbed until a page needs it.
     return mockCareGuideApi.routeForms({} as CaseDraft);
   },
+
   async mapFormFields(draft) {
-    return mockCareGuideApi.mapFormFields(draft);
+    const caseId = await ensureCaseId(draft.language);
+    const response = await apiFetch<{ form_id: string; fields: BackendMappedField[] }>(
+      "/api/forms/map-fields",
+      {
+        method: "POST",
+        body: JSON.stringify({ case_id: caseId, form_id: DEFAULT_REVIEW_FORM_ID })
+      }
+    );
+    return response.fields.map(mapBackendField);
   },
-  async verifyPacket(fields) {
-    return mockCareGuideApi.verifyPacket(fields);
+
+  async verifyPacket(_fields) {
+    // Backend verifies the packet by case+form, not by a field payload. It
+    // reads the persisted FormFieldValue rows written by /api/forms/map-fields
+    // (which the caller just POSTed via mapFormFields), so calling verify
+    // right after map-fields sees the correct state.
+    const caseId = await ensureCaseId("en");
+    const response = await apiFetch<{
+      blocking_flags: string[];
+      warnings: string[];
+      ready_for_handoff: boolean;
+    }>("/api/forms/verify", {
+      method: "POST",
+      body: JSON.stringify({ case_id: caseId, form_id: DEFAULT_REVIEW_FORM_ID })
+    });
+    // The Review page's ready check is `flags.length === 0`, so combine
+    // blocking flags (which stop handoff) with warnings (soft, informational).
+    return {
+      ready: response.ready_for_handoff,
+      flags: [...response.blocking_flags, ...response.warnings]
+    };
   },
+
   async getNearbyResources() {
     return [];
   },
+
   async createHandoffPassport() {
     return { summaryId: "handoff-pending" };
   }
@@ -395,71 +498,13 @@ export const mockCareGuideApi: CareGuideApiClient = {
   }
 };
 
-/* --------- default client: prefer live, fall back to mock on error -------- */
+/* --------- default client: live only. Mock stays exported for tests. ------ */
 
-function withMockFallback(live: CareGuideApiClient, mock: CareGuideApiClient): CareGuideApiClient {
-  return {
-    async createCase() {
-      try {
-        return await live.createCase();
-      } catch (err) {
-        console.warn("[careGuideApi] createCase falling back to mock:", err);
-        return mock.createCase();
-      }
-    },
-    async submitIntakeMessage(message, draft) {
-      try {
-        return await live.submitIntakeMessage(message, draft);
-      } catch (err) {
-        console.warn("[careGuideApi] submitIntakeMessage falling back to mock:", err);
-        return mock.submitIntakeMessage(message, draft);
-      }
-    },
-    async evaluatePathway(draft) {
-      try {
-        return await live.evaluatePathway(draft);
-      } catch (err) {
-        console.warn("[careGuideApi] evaluatePathway falling back to mock:", err);
-        return mock.evaluatePathway(draft);
-      }
-    },
-    async routeForms(draft) {
-      try {
-        return await live.routeForms(draft);
-      } catch {
-        return mock.routeForms(draft);
-      }
-    },
-    async mapFormFields(draft) {
-      try {
-        return await live.mapFormFields(draft);
-      } catch {
-        return mock.mapFormFields(draft);
-      }
-    },
-    async verifyPacket(fields) {
-      try {
-        return await live.verifyPacket(fields);
-      } catch {
-        return mock.verifyPacket(fields);
-      }
-    },
-    async getNearbyResources(zip) {
-      try {
-        return await live.getNearbyResources(zip);
-      } catch {
-        return mock.getNearbyResources(zip);
-      }
-    },
-    async createHandoffPassport(draft) {
-      try {
-        return await live.createHandoffPassport(draft);
-      } catch {
-        return mock.createHandoffPassport(draft);
-      }
-    }
-  };
-}
-
-export const careGuideApi = withMockFallback(liveCareGuideApi, mockCareGuideApi);
+// Default client is the real backend. No silent fallback to mock — if the
+// backend is unreachable (network error, timeout, non-2xx), apiFetch throws
+// with a clear message and the calling UI component surfaces the failure
+// as an error state instead of pretending everything is fine with fake data.
+// This surfaces "backend not set up" as a visible 500-class error to the user,
+// which is the correct signal when a deploy is misconfigured.
+export const careGuideApi: CareGuideApiClient = liveCareGuideApi;
 export { API_BASE_URL };
