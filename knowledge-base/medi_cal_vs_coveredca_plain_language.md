@@ -13,8 +13,9 @@ county makes the final decision.
 - **Covered California** — the state's marketplace where people buy a private
   health plan, often with financial help (subsidies) that lowers the monthly cost.
 
-You do not choose the program by preference. One application (CCFRM604) is
-submitted, and income and household details determine which pathway fits.
+You do not choose the program by preference. A single application (CCFRM604)
+covers both programs, and income and household details determine which pathway
+fits.
 
 ## How the pathway is decided (likely pathway only)
 
@@ -24,8 +25,8 @@ Guidelines (see [`data_sources.md`](data_sources.md)).
 
 | Situation | Likely pathway | Rule |
 |---|---|---|
-| Income at or below ~138% FPL | **Medi-Cal likely** | `medi_cal_income_gate_001` |
-| Income roughly 138%–400% FPL | **Covered California likely** (with financial help) | `covered_ca_subsidy_range_001` |
+| Income below ~138% FPL | **Medi-Cal likely** | `medi_cal_income_gate_001` |
+| Income roughly 138%–400% FPL (138% included) | **Covered California likely** (with financial help) | `covered_ca_subsidy_range_001` |
 | Income above ~400% FPL | **Covered California likely** (financial help less likely) | `covered_ca_higher_income_001` |
 | Mixed immigration status household | **Human review** | `mixed_household_review_001` |
 | ZIP or household/income facts missing | **Human review** | `intake_needs_zip_001`, `intake_incomplete_fallback_001` |
