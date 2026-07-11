@@ -22,7 +22,7 @@ import {
 import { NearbyResourcesMap } from "@/components/maps/NearbyResourcesMap";
 import { AddressAutocomplete } from "@/components/maps/AddressAutocomplete";
 import { OfficialResourcesList } from "@/components/coverage/OfficialResourcesList";
-import { careGuideApi } from "@/lib/coverage/api";
+import { careGuideApi, generateHandoffPassport } from "@/lib/coverage/api";
 import {
   emptyCaseDraft,
   readCaseDraft,
@@ -679,6 +679,7 @@ export function ReviewPage() {
   const { draft, loaded } = useCaseDraft();
   const [fields, setFields] = useState<FormFieldValue[]>([]);
   const [flags, setFlags] = useState<string[]>([]);
+  const [passportStatus, setPassportStatus] = useState<"idle" | "generating" | "error">("idle");
 
   useEffect(() => {
     if (!loaded || !draft) {
@@ -691,6 +692,19 @@ export function ReviewPage() {
       setFlags(verification.flags);
     });
   }, [draft, loaded]);
+
+  const handleGeneratePassport = async () => {
+    setPassportStatus("generating");
+    const result = await generateHandoffPassport();
+    if (!result) {
+      setPassportStatus("error");
+      return;
+    }
+    // Open the printable HTML packet in a new tab. The tab's own Print button
+    // uses the browser's native print (or Save-as-PDF) dialog.
+    window.open(result.htmlViewUrl, "_blank", "noopener,noreferrer");
+    setPassportStatus("idle");
+  };
 
   if (!loaded) {
     return <PageIntro title="Preparing your review" />;
@@ -735,9 +749,25 @@ export function ReviewPage() {
         </div>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <SecondaryButton href="/coverage/application">Fix missing items</SecondaryButton>
-          <PrimaryButton href="/coverage/help">Continue to local help</PrimaryButton>
-          <SecondaryButton onClick={() => window.print()}>Download review summary</SecondaryButton>
+          <PrimaryButton
+            onClick={handleGeneratePassport}
+            disabled={passportStatus === "generating"}
+          >
+            {passportStatus === "generating"
+              ? "Preparing your Handoff Passport…"
+              : "Generate Handoff Passport"}
+          </PrimaryButton>
+          <SecondaryButton href="/coverage/help">Continue to local help</SecondaryButton>
         </div>
+        {passportStatus === "error" ? (
+          <p className="mt-3 text-sm font-semibold text-navy">
+            Could not prepare the passport. Confirm the backend is reachable and try again.
+          </p>
+        ) : null}
+        <p className="mt-4 text-xs text-slatecare">
+          The Handoff Passport is a reviewed one-page summary you can print or save as PDF and
+          bring to a certified enrollment counselor. It is not an official submission.
+        </p>
       </section>
     </>
   );
