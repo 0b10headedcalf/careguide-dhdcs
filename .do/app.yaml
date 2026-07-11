@@ -13,7 +13,7 @@ services:
     dockerfile_path: apps/web/Dockerfile
     source_dir: /
     github:
-      repo: 0b10headedcalf/team-dhdcs
+      repo: 0b10headedcalf/careguide-dhdcs
       branch: main
       deploy_on_push: true
     http_port: 8080
@@ -40,7 +40,7 @@ services:
     dockerfile_path: apps/api/Dockerfile
     source_dir: /
     github:
-      repo: 0b10headedcalf/team-dhdcs
+      repo: 0b10headedcalf/careguide-dhdcs
       branch: main
       deploy_on_push: true
     http_port: 8000
