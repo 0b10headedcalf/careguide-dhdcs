@@ -4,13 +4,37 @@ from app.core.config import get_settings
 from app.utils.dates import utc_now_iso
 
 
+# 1 mile in meters, per NIST (int() truncates to 1609 which matches SODA docs' examples).
+METERS_PER_MILE = 1609.34
+
+# Fallback fetch cap when no coordinates are supplied. Keep this small — this is
+# the "give me any SF facilities" path and callers are expected to pass lat/lng
+# in every normal case.
+DEFAULT_UNFILTERED_LIMIT = 50
+
+# Cap when spatial filtering is applied. Larger than the unfiltered cap because
+# the caller has already narrowed to a location and we want the full set nearby.
+DEFAULT_SPATIAL_LIMIT = 200
+
+
 class DataSFAdapter:
     source_id = "datasf_health_care_facilities"
 
     async def nearby(self, *, lat: float | None, lng: float | None, radius_miles: float) -> list[dict]:
         settings = get_settings()
         headers = {"X-App-Token": settings.DATASF_APP_TOKEN} if settings.DATASF_APP_TOKEN else {}
-        params = {"$limit": 50}
+
+        if lat is not None and lng is not None:
+            # jhsu-2pka is SF only; spatial filter honestly returns 0 outside SF
+            # instead of returning irrelevant SF facilities for a non-SF ZIP.
+            radius_meters = max(1, int(radius_miles * METERS_PER_MILE))
+            params = {
+                "$limit": DEFAULT_SPATIAL_LIMIT,
+                "$where": f"within_circle(location, {lat}, {lng}, {radius_meters})",
+            }
+        else:
+            params = {"$limit": DEFAULT_UNFILTERED_LIMIT}
+
         async with httpx.AsyncClient(timeout=8, headers=headers) as client:
             response = await client.get(settings.DATASF_HEALTH_FACILITIES_URL, params=params)
             response.raise_for_status()
