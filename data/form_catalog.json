@@ -7,6 +7,9 @@
     "source_id": "covered_ca_forms",
     "source_type": "official_website",
     "supported_languages": ["en"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf"
+    },
     "last_verified_at": "2026-07-11T00:00:00Z",
     "active": true
   },
@@ -18,6 +21,10 @@
     "source_id": "covered_ca_forms",
     "source_type": "official_website",
     "supported_languages": ["en", "es"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/support/forms/",
+      "es": "https://www.coveredca.com/espanol/support/forms/"
+    },
     "last_verified_at": "2026-07-11T00:00:00Z",
     "active": true
   },
@@ -29,7 +36,11 @@
     "source_id": "covered_ca_forms",
     "source_type": "official_website",
     "supported_languages": ["en"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/pdfs/Attestation-Form-Income-No-Documentation-Available-English.pdf"
+    },
     "last_verified_at": "2026-07-11T00:00:00Z",
+    "notes": "No public Spanish PDF is listed on coveredca.com/espanol/support/forms/ as of last verification. UI must fall back to English or route to a bilingual counselor for Spanish speakers.",
     "active": true
   },
   {
@@ -39,9 +50,12 @@
     "official_url": "https://www.coveredca.com/pdfs/DocumentCoverPage.pdf",
     "source_id": "covered_ca_forms",
     "source_type": "official_website",
-    "supported_languages": ["en"],
+    "supported_languages": ["en", "es"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/pdfs/DocumentCoverPage.pdf",
+      "es": "https://www.coveredca.com/pdfs/DocumentCoverPageSpanish.pdf"
+    },
     "last_verified_at": "2026-07-11T00:00:00Z",
     "active": true
   }
 ]
-
