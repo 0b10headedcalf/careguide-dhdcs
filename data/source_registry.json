@@ -1,0 +1,53 @@
+[
+  {
+    "source_id": "covered_ca_forms",
+    "name": "Covered California Forms",
+    "source_type": "official_website",
+    "base_url": "https://www.coveredca.com/support/forms/",
+    "official": true,
+    "cache_policy": "official_snapshot_allowed",
+    "default_ttl_hours": 24,
+    "fields_used": ["form name", "official URL", "language"]
+  },
+  {
+    "source_id": "covered_ca_local_help",
+    "name": "Covered California Local Help",
+    "source_type": "official_website",
+    "base_url": "https://apply.coveredca.com/static/lw-enrollment/anon/locateAssistance/locateAssistanceSearch?helpType=cec",
+    "official": true,
+    "cache_policy": "official_snapshot_allowed",
+    "default_ttl_hours": 24,
+    "fields_used": ["official local help search URL"]
+  },
+  {
+    "source_id": "hrsa_health_centers",
+    "name": "HRSA Primary Health Care Facilities",
+    "source_type": "public_api",
+    "base_url": "https://gisportal.hrsa.gov/server/rest/services/HealthCareFacilities/PrimaryHealthCareFacilities_FS/MapServer/0/query",
+    "official": true,
+    "cache_policy": "official_snapshot_allowed",
+    "default_ttl_hours": 24,
+    "fields_used": ["SITE_NM", "SITE_PHONE_NUM", "SITE_URL", "SITE_ADDRESS", "SITE_CITY", "SITE_STATE_ABBR", "SITE_ZIP_CD", "HCC_TYP_DESC", "HCC_STATUS_DESC"]
+  },
+  {
+    "source_id": "datasf_health_care_facilities",
+    "name": "DataSF Health Care Facilities",
+    "source_type": "public_api",
+    "base_url": "https://data.sfgov.org/resource/jhsu-2pka.json",
+    "official": true,
+    "cache_policy": "official_snapshot_allowed",
+    "default_ttl_hours": 24,
+    "fields_used": ["facility_name", "facility_type", "services", "location", "point"]
+  },
+  {
+    "source_id": "google_maps",
+    "name": "Google Maps Platform",
+    "source_type": "supplemental_api",
+    "base_url": "https://maps.googleapis.com",
+    "official": false,
+    "cache_policy": "supplemental_snapshot_allowed",
+    "default_ttl_hours": 24,
+    "fields_used": ["geocoding", "place name", "address", "coordinates", "directions URL"]
+  }
+]
+

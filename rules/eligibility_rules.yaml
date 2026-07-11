@@ -1,0 +1,62 @@
+rules:
+  - id: coverage_need_ca_001
+    description: California resident seeking health coverage
+    when:
+      all:
+        - field: location.zip
+          operator: exists
+        - field: insurance.needs_health_coverage
+          operator: equals
+          value: true
+    outcome:
+      pathway: human_review
+      explanation_simple: >
+        You may have a California health coverage pathway, but more household
+        and income information must be reviewed before a specific path is prepared.
+      missing_questions:
+        - household.size
+        - income.estimate
+        - income.frequency
+      verification_flags: []
+      human_review_required: true
+      next_best_action: Continue intake and prepare documents for review.
+  - id: household_income_review_001
+    description: Household and income facts are present and need review
+    when:
+      all:
+        - field: household.size
+          operator: exists
+        - field: income.estimate
+          operator: exists
+        - field: income.frequency
+          operator: exists
+    outcome:
+      pathway: medi_cal_likely
+      explanation_simple: >
+        Based on the information provided, you may be a match for Medi-Cal.
+        The official state or county review makes the final decision.
+      missing_questions: []
+      verification_flags:
+        - Confirm income documents before handoff.
+      human_review_required: false
+      next_best_action: Continue to document preparation.
+  - id: default_human_review_001
+    description: Default pathway when more facts are needed
+    when:
+      all:
+        - field: location.zip
+          operator: missing
+    outcome:
+      pathway: human_review
+      explanation_simple: >
+        CareBridge CA needs a ZIP code and basic household details before it can
+        prepare a likely pathway.
+      missing_questions:
+        - location.zip
+        - household.size
+        - income.estimate
+      verification_flags:
+        - Intake is incomplete.
+      human_review_required: true
+      next_best_action: Ask one intake question at a time.
+
