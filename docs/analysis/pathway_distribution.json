@@ -1,0 +1,213 @@
+{
+  "generated_at": "2026-07-11T18:57:54.840447+00:00",
+  "persona_count": 20,
+  "results": [
+    {
+      "id": "P01",
+      "label": "Single adult, deep poverty, SF",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P02",
+      "label": "Family of 3 on ~$26k/yr, LA",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P03",
+      "label": "Single parent, household 2, Fresno",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P04",
+      "label": "Family of 4 at 112% FPL, San Diego",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P05",
+      "label": "Family of 5 on $42k/yr, Oakland",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P06",
+      "label": "Freelancer single, ~230% FPL, SF",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_subsidy_range_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P07",
+      "label": "Couple at ~$60k/yr, LA",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_subsidy_range_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P08",
+      "label": "Family of 3 at ~$78k/yr, San Diego",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_subsidy_range_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P09",
+      "label": "Single adult at ~$54k/yr, San Jose",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_subsidy_range_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P10",
+      "label": "Family of 4 at ~$120k/yr, Sacramento",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_subsidy_range_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P11",
+      "label": "Recently unemployed, family of 3, SF",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P12",
+      "label": "Single tech worker, ~$144k/yr, SF",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_higher_income_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P13",
+      "label": "High-income family of 4, San Jose",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_higher_income_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P14",
+      "label": "Mixed-status household, family of 4, LA",
+      "expected_category": "mixed_household",
+      "actual_pathway": "mixed_household",
+      "triggered_rule_ids": [
+        "mixed_household_review_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P15",
+      "label": "Intake: ZIP-only, no household",
+      "expected_category": "human_review",
+      "actual_pathway": "human_review",
+      "triggered_rule_ids": [
+        "intake_incomplete_fallback_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P16",
+      "label": "Intake: no ZIP",
+      "expected_category": "human_review",
+      "actual_pathway": "human_review",
+      "triggered_rule_ids": [
+        "intake_needs_zip_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P17",
+      "label": "Gig worker, no docs, family of 2, SF",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P18",
+      "label": "Family of 3 with employer offer, mid-income, Oakland",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_subsidy_range_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P19",
+      "label": "Single adult, right at 138% FPL boundary",
+      "expected_category": "covered_ca_likely",
+      "actual_pathway": "covered_ca_likely",
+      "triggered_rule_ids": [
+        "covered_ca_subsidy_range_001"
+      ],
+      "match": true
+    },
+    {
+      "id": "P20",
+      "label": "Family of 8 at low income, Central Valley",
+      "expected_category": "medi_cal_likely",
+      "actual_pathway": "medi_cal_likely",
+      "triggered_rule_ids": [
+        "medi_cal_income_gate_001"
+      ],
+      "match": true
+    }
+  ],
+  "distribution": {
+    "covered_ca_likely": 9,
+    "medi_cal_likely": 8,
+    "human_review": 2,
+    "mixed_household": 1
+  },
+  "match_rate": 1.0
+}

@@ -1,4 +1,28 @@
 rules:
+  # Mixed-status households must be evaluated before income gates: CareBridge
+  # cannot interpret immigration law, so the answer is always "human review"
+  # regardless of household income.
+  - id: mixed_household_review_001
+    description: >
+      Household indicates mixed immigration status — pathway differs by person
+      and requires human review, since CareBridge CA does not interpret
+      immigration law.
+    when:
+      any:
+        - field: household.has_mixed_immigration_status
+          operator: equals
+          value: true
+    outcome:
+      pathway: mixed_household
+      explanation_simple: >
+        Different members of the household may have different coverage
+        pathways. A certified enrollment counselor should review this.
+      missing_questions: []
+      verification_flags:
+        - Mixed-status household requires human review.
+      human_review_required: true
+      next_best_action: Connect with a certified enrollment counselor.
+
   - id: medi_cal_income_gate_001
     description: >
       Household income appears at or below the Medi-Cal adult MAGI threshold
@@ -84,27 +108,6 @@ rules:
         - Higher household income — confirm current federal subsidy rules before handoff.
       human_review_required: false
       next_best_action: Continue to employer coverage and document preparation.
-
-  - id: mixed_household_review_001
-    description: >
-      Household indicates mixed immigration status — pathway differs by person
-      and requires human review, since CareBridge CA does not interpret
-      immigration law.
-    when:
-      any:
-        - field: household.has_mixed_immigration_status
-          operator: equals
-          value: true
-    outcome:
-      pathway: mixed_household
-      explanation_simple: >
-        Different members of the household may have different coverage
-        pathways. A certified enrollment counselor should review this.
-      missing_questions: []
-      verification_flags:
-        - Mixed-status household requires human review.
-      human_review_required: true
-      next_best_action: Connect with a certified enrollment counselor.
 
   - id: intake_needs_zip_001
     description: >
