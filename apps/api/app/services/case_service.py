@@ -4,10 +4,10 @@ from sqlmodel import Session, col, select
 
 from app.core.constants import SUPPORTED_LANGUAGES
 from app.core.exceptions import CaseNotFoundError
-from app.models.case import Case, CaseFact
+from app.models.case import Case, CaseFact, CaseResourceRecommendation
 from app.models.form import FormRoute
+from app.models.document import UploadedDocument
 from app.models.pathway import PathwayResult
-from app.models.resource import Resource
 from app.schemas.case import CaseCreate
 from app.utils.dates import utc_now
 from app.utils.json import dumps_json, loads_json
@@ -21,6 +21,18 @@ def create_case(session: Session, payload: CaseCreate) -> Case:
         explanation_style=payload.explanation_style,
         consent_status=payload.consent_status,
     )
+    session.add(case)
+    session.commit()
+    session.refresh(case)
+    return case
+
+
+def update_case_language(session: Session, case_id: str, language: str) -> Case:
+    if language not in SUPPORTED_LANGUAGES:
+        raise ValueError("Unsupported language. Supported languages are en and es.")
+    case = get_case_or_404(session, case_id)
+    case.language = language
+    case.updated_at = utc_now()
     session.add(case)
     session.commit()
     session.refresh(case)
@@ -116,16 +128,44 @@ def case_detail(session: Session, case_id: str) -> dict:
     ]
     pathway = latest_pathway(session, case_id)
     routes = session.exec(select(FormRoute).where(FormRoute.case_id == case_id)).all()
-    resources = session.exec(select(Resource).limit(0)).all()
+    recommendations = session.exec(
+        select(CaseResourceRecommendation).where(CaseResourceRecommendation.case_id == case_id)
+    ).all()
+    documents = session.exec(
+        select(UploadedDocument).where(UploadedDocument.case_id == case_id)
+    ).all()
     verification_flags = []
     if pathway:
         verification_flags = loads_json(pathway.verification_flags_json, [])
-    progress = {
-        "intake_complete": bool(facts),
-        "forms_triggered": len(routes),
-        "resources_selected": len(resources),
-        "next_action": "Continue intake" if not facts else "Review likely pathway",
+    confirmed_names = {
+        fact["canonical_name"] for fact in facts if fact["confirmed_by_user"]
     }
+    intake_required = {
+        "location.zip",
+        "household.size",
+        "income.estimate",
+        "income.frequency",
+        "employer.coverage_offer",
+    }
+    intake_complete = intake_required.issubset(confirmed_names)
+    next_actions = {
+        "created": "Continue intake",
+        "intake_in_progress": "Continue intake",
+        "pathway_ready": "Review required documents",
+        "documents_pending": "Prepare application fields",
+        "form_drafted": "Verify the prepared packet",
+        "verification_needed": "Review missing or uncertain information",
+        "ready_for_human_review": "Review and prepare a counselor handoff",
+        "handoff_created": "Use or share the reviewed handoff packet",
+    }
+    progress = {
+        "intake_complete": intake_complete,
+        "forms_triggered": len(routes),
+        "resources_selected": len(recommendations),
+        "next_action": next_actions.get(case.status, "Continue intake"),
+    }
+    if case.status == "intake_in_progress" and intake_complete:
+        progress["next_action"] = "Review likely pathway"
     return {
         "case_id": case.id,
         "language": case.language,
@@ -139,6 +179,7 @@ def case_detail(session: Session, case_id: str) -> dict:
             "explanation_simple": pathway.explanation_simple,
             "rule_ids": loads_json(pathway.rule_ids_json, []),
             "missing_questions": loads_json(pathway.missing_questions_json, []),
+            "human_review_required": pathway.human_review_required,
         }
         if pathway
         else None,
@@ -152,7 +193,43 @@ def case_detail(session: Session, case_id: str) -> dict:
             for route in routes
         ],
         "verification_flags": verification_flags,
-        "recommended_resources": [],
+        "recommended_resources": [
+            {
+                "resource_id": recommendation.resource_id,
+                "reason_recommended": recommendation.reason_recommended,
+                "distance_miles": recommendation.distance_miles,
+            }
+            for recommendation in recommendations
+        ],
+        "uploaded_documents": [
+            {
+                "document_id": document.id,
+                "filename": document.filename,
+                "document_type": document.document_type,
+                "extraction_status": document.extraction_status,
+                "needs_confirmation": document.needs_confirmation,
+                "confirmed_by_user": document.confirmed_by_user,
+            }
+            for document in documents
+        ],
         "progress_summary": progress,
     }
 
+
+def generate_action_plan(session: Session, case_id: str) -> dict:
+    detail = case_detail(session, case_id)
+    status = detail["status"]
+    pathway = detail["latest_pathway_result"] or {}
+    missing_information = list(pathway.get("missing_questions") or [])
+    needs_human_review = (
+        bool(detail["verification_flags"])
+        or bool(pathway.get("human_review_required"))
+        or status in {"verification_needed", "ready_for_human_review"}
+    )
+    return {
+        "case_id": case_id,
+        "status": status,
+        "next_action": detail["progress_summary"]["next_action"],
+        "needs_human_review": needs_human_review,
+        "missing_information": missing_information,
+    }

@@ -6,12 +6,13 @@ from sqlmodel import Session, select
 from app.core.config import get_settings
 from app.models.form import FormRoute
 from app.rules.loader import load_json, load_yaml
-from app.services.case_service import facts_as_dict, latest_pathway
+from app.services.case_service import facts_as_dict, get_case_or_404, latest_pathway
 from app.services.eligibility_engine import _evaluate_clause
 from app.utils.dates import utc_now
 
 
 def route_forms_for_case(session: Session, case_id: str) -> list[dict]:
+    case = get_case_or_404(session, case_id)
     settings = get_settings()
     facts = facts_as_dict(session, case_id, confirmed_only=True)
     pathway = latest_pathway(session, case_id)
@@ -43,6 +44,10 @@ def route_forms_for_case(session: Session, case_id: str) -> list[dict]:
                 "status": route.status,
             }
         )
+    if triggered:
+        case.status = "documents_pending"
+        session.add(case)
+        session.commit()
     return triggered
 
 
@@ -74,4 +79,3 @@ def _parse_datetime(value: Any) -> datetime | None:
     if not value:
         return None
     return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-

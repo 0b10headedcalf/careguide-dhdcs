@@ -182,15 +182,17 @@ export function SecondaryButton({
   children,
   href,
   onClick,
+  disabled,
   type = "button"
 }: {
   children: ReactNode;
   href?: string;
   onClick?: () => void;
+  disabled?: boolean;
   type?: "button" | "submit";
 }) {
   const className =
-    "inline-flex min-h-12 items-center justify-center rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-5 text-base font-extrabold text-navy transition hover:border-primary hover:text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary";
+    "inline-flex min-h-12 items-center justify-center rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-5 text-base font-extrabold text-navy transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary";
 
   if (href) {
     return (
@@ -201,7 +203,7 @@ export function SecondaryButton({
   }
 
   return (
-    <button type={type} onClick={onClick} className={className}>
+    <button type={type} onClick={onClick} disabled={disabled} className={className}>
       {children}
     </button>
   );
@@ -503,7 +505,7 @@ export function SourceBadge({
 }) {
   if (!sourceId && !sourceUrl) return null;
   const label = sourceId ? sourceIdToLabel(sourceId) : "Official source";
-  const dateText = retrievedDate ? new Date(retrievedDate).toLocaleDateString() : null;
+  const dateText = retrievedDate ? retrievedDate.split("T")[0] : null;
 
   if (isCached) {
     return (
@@ -659,4 +661,3 @@ export function InlineArrowLink({ href, children }: { href: string; children: Re
     </Link>
   );
 }
-

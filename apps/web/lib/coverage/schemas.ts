@@ -103,6 +103,7 @@ export const caseDetailSchema = vObject({
     })
   ),
   triggered_forms: vMaybe(vArray(vObject({ form_id: vString, official_url: vMaybe(vString) }))),
+  uploaded_documents: vMaybe(vArray(vUnknown)),
   progress_summary: vMaybe(
     vObject({
       intake_complete: vMaybe(vBoolean),
@@ -122,10 +123,33 @@ export const intakeConfirmSchema = vObject({
 export type IntakeConfirmResult = ReturnType<typeof intakeConfirmSchema>;
 
 export const intakeMessageSchema = vObject({
-  suggestions: vMaybe(vArray(vUnknown)),
-  next_question: vMaybe(vNullable(vString))
+  case_delta: vArray(
+    vObject({
+      canonical_name: vString,
+      suggested_value: vUnknown,
+      source_type: vMaybe(vString),
+      source_ref: vString,
+      confidence: vNumber,
+      needs_review: vBoolean,
+      explanation_simple: vString,
+      auto_confirmed: vMaybe(vBoolean)
+    })
+  ),
+  next_question: vString,
+  confirmation_needed: vBoolean,
+  warnings: vArray(vString),
+  auto_confirmed_facts: vArray(vString)
 });
 export type IntakeMessageResult = ReturnType<typeof intakeMessageSchema>;
+
+export const actionPlanSchema = vObject({
+  case_id: vString,
+  status: vString,
+  next_action: vString,
+  needs_human_review: vBoolean,
+  missing_information: vArray(vString)
+});
+export type ActionPlan = ReturnType<typeof actionPlanSchema>;
 
 export const pathwayResultSchema = vObject({
   likely_pathway: vString,
@@ -202,3 +226,45 @@ export const handoffPacketSchema = vObject({
   user_reviewed: vBoolean
 });
 export type HandoffPacket = ReturnType<typeof handoffPacketSchema>;
+
+export const agentMessageSchema = vObject({
+  assistant_message: vString,
+  next_question: vMaybe(vString),
+  suggested_case_updates: vArray(vUnknown),
+  form_field_candidates: vArray(vUnknown),
+  needs_confirmation: vBoolean,
+  safety_flags: vArray(vString),
+  next_action: vString,
+  agent_available: vBoolean,
+  metadata: vMaybe(vUnknown)
+});
+export type AgentMessageResult = ReturnType<typeof agentMessageSchema>;
+
+export const transcriptionSchema = vObject({
+  text: vString,
+  language_code: vMaybe(vString),
+  language_probability: vMaybe(vNumber),
+  words: vArray(vUnknown),
+  source: vString
+});
+export type TranscriptionResult = ReturnType<typeof transcriptionSchema>;
+
+export const documentSchema = vObject({
+  document_id: vString,
+  case_id: vString,
+  filename: vString,
+  document_type: vMaybe(vString),
+  mime_type: vString,
+  size_bytes: vNumber,
+  sha256: vString,
+  status: vString,
+  extraction_status: vString,
+  extracted_text_preview: vMaybe(vString),
+  needs_confirmation: vBoolean,
+  confirmed_by_user: vBoolean
+});
+export type UploadedDocument = ReturnType<typeof documentSchema>;
+
+export const documentListSchema = vObject({
+  documents: vArray(documentSchema)
+});

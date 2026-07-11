@@ -10,6 +10,10 @@ class CaseCreate(BaseModel):
     consent_status: str = "not_requested"
 
 
+class CaseUpdate(BaseModel):
+    language: str
+
+
 class CaseCreateData(BaseModel):
     case_id: str
     language: str
@@ -41,5 +45,13 @@ class CaseDetailData(BaseModel):
     triggered_forms: list[dict] = Field(default_factory=list)
     verification_flags: list[str] = Field(default_factory=list)
     recommended_resources: list[dict] = Field(default_factory=list)
+    uploaded_documents: list[dict] = Field(default_factory=list)
     progress_summary: dict[str, Any] = Field(default_factory=dict)
 
+
+class ActionPlanData(BaseModel):
+    case_id: str
+    status: str
+    next_action: str
+    needs_human_review: bool
+    missing_information: list[str] = Field(default_factory=list)

@@ -25,14 +25,26 @@ curl http://localhost:8000/api/health
 ## Core Flow
 
 1. `POST /api/cases`
-2. `POST /api/intake/message`
-3. `POST /api/intake/confirm`
-4. `POST /api/eligibility/evaluate`
-5. `POST /api/forms/route`
-6. `POST /api/forms/map-fields`
-7. `POST /api/forms/verify`
-8. `GET /api/resources/nearby`
-9. `POST /api/handoff-passport`
+2. `PATCH /api/cases/{case_id}` (language preference)
+3. `POST /api/intake/message`
+4. `POST /api/intake/confirm`
+5. `POST /api/eligibility/evaluate`
+6. `POST /api/forms/route`
+7. `POST /api/forms/map-fields`
+8. `POST /api/forms/verify`
+9. `GET /api/resources/nearby`
+10. `GET /api/cases/{case_id}/action-plan`
+11. `POST /api/handoff-passport`
+
+## Voice Agent and Documents
+
+- `POST /api/agent/message`
+- `POST /api/forms/ask`
+- `POST /api/forms/next-question`
+- `POST /api/voice/transcribe` (multipart audio)
+- `POST /api/documents/upload` (multipart document)
+- `GET /api/cases/{case_id}/documents`
+- `POST /api/documents/{document_id}/confirm`
 
 ## DigitalOcean App Platform
 
@@ -51,4 +63,3 @@ The API runs without DigitalOcean, NVIDIA, Vapi, or Google Maps credentials. Wit
 - Google results are omitted;
 - Vapi webhook returns a configuration warning;
 - no fake fallback resources are shown.
-

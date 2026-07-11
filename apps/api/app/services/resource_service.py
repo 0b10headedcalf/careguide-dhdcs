@@ -6,8 +6,10 @@ from sqlmodel import Session, col, select
 from app.adapters.datasf import DataSFAdapter
 from app.adapters.google_maps import GoogleMapsAdapter
 from app.adapters.hrsa import HRSAAdapter
+from app.models.case import CaseResourceRecommendation
 from app.models.resource import Resource
 from app.models.source import SourceSnapshot
+from app.services.case_service import get_case_or_404
 from app.utils.dates import parse_datetime
 from app.utils.distance import haversine_miles
 from app.utils.hashing import sha256_json
@@ -25,6 +27,8 @@ async def get_nearby_resources(
     needs: str | None,
     radius_miles: float,
 ) -> dict:
+    if case_id:
+        get_case_or_404(session, case_id)
     if lat is None or lng is None:
         geocoded = await GoogleMapsAdapter().geocode_zip(zip_code) if zip_code else None
         if geocoded:
@@ -66,27 +70,64 @@ async def get_nearby_resources(
             distance = haversine_miles(lat, lng, float(record["lat"]), float(record["lng"]))
         if distance is not None and distance > radius_miles:
             continue
-        resource = Resource(
-            external_resource_id=record.get("external_resource_id") or record["name"],
-            source_id=record["source_id"],
-            source_type=record["source_type"],
-            source_url=record["source_url"],
-            retrieved_at=parse_datetime(record["retrieved_at"]),
-            content_hash=sha256_json(record),
-            name=record["name"],
-            resource_type=record["resource_type"],
-            address=record.get("address"),
-            phone=record.get("phone"),
-            url=record.get("url"),
-            lat=record.get("lat"),
-            lng=record.get("lng"),
-            verified_language_support_json=dumps_json(record.get("verified_language_support", [])),
-            services_json=dumps_json(record.get("services", [])),
-            raw_normalized_json=dumps_json(record.get("raw_normalized", {})),
+        external_resource_id = record.get("external_resource_id") or record["name"]
+        resource = session.exec(
+            select(Resource)
+            .where(Resource.source_id == record["source_id"])
+            .where(Resource.external_resource_id == external_resource_id)
+        ).first()
+        if not resource:
+            resource = Resource(
+                external_resource_id=external_resource_id,
+                source_id=record["source_id"],
+                source_type=record["source_type"],
+                source_url=record["source_url"],
+                retrieved_at=parse_datetime(record["retrieved_at"]),
+                content_hash=sha256_json(record),
+                name=record["name"],
+                resource_type=record["resource_type"],
+            )
+        resource.source_type = record["source_type"]
+        resource.source_url = record["source_url"]
+        resource.retrieved_at = parse_datetime(record["retrieved_at"])
+        resource.content_hash = sha256_json(record)
+        resource.name = record["name"]
+        resource.resource_type = record["resource_type"]
+        resource.address = record.get("address")
+        resource.phone = record.get("phone")
+        resource.url = record.get("url")
+        resource.lat = record.get("lat")
+        resource.lng = record.get("lng")
+        resource.verified_language_support_json = dumps_json(
+            record.get("verified_language_support", [])
         )
+        resource.services_json = dumps_json(record.get("services", []))
+        resource.raw_normalized_json = dumps_json(record.get("raw_normalized", {}))
         session.add(resource)
         session.commit()
         session.refresh(resource)
+        reason_recommended = (
+            "Nearby verified HRSA health center."
+            if resource.source_id == "hrsa_health_centers"
+            else "Nearby public-source healthcare resource."
+        )
+        if case_id:
+            recommendation = session.exec(
+                select(CaseResourceRecommendation)
+                .where(CaseResourceRecommendation.case_id == case_id)
+                .where(CaseResourceRecommendation.resource_id == resource.id)
+            ).first()
+            if not recommendation:
+                session.add(
+                    CaseResourceRecommendation(
+                        case_id=case_id,
+                        resource_id=resource.id,
+                        reason_recommended=reason_recommended,
+                        distance_miles=distance,
+                        source_priority=int(record.get("source_priority", 99)),
+                    )
+                )
+                session.commit()
         output.append(
             {
                 "resource_id": resource.id,
@@ -103,10 +144,18 @@ async def get_nearby_resources(
                 "source_url": resource.source_url,
                 "retrieved_at": str(resource.retrieved_at),
                 "is_cached": bool(record.get("is_cached", False)),
-                "reason_recommended": "Nearby verified HRSA health center." if resource.source_id == "hrsa_health_centers" else "Nearby public-source healthcare resource.",
+                "reason_recommended": reason_recommended,
             }
         )
-    output.sort(key=lambda item: (item["distance_miles"] is None, item["distance_miles"] or 9999))
+    output.sort(
+        key=lambda item: (
+            0
+            if language and language in (item.get("verified_language_support") or [])
+            else 1,
+            item["distance_miles"] is None,
+            item["distance_miles"] or 9999,
+        )
+    )
     return {"resources": output}
 
 

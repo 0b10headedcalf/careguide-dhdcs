@@ -3,7 +3,7 @@ from typing import Any
 from sqlmodel import Session
 
 from app.core.config import get_settings
-from app.core.constants import AUTO_CONFIRM_MIN_CONFIDENCE, HIGH_RISK_FACTS
+from app.core.constants import AUTO_CONFIRM_MIN_CONFIDENCE, HIGH_RISK_FACTS, SUPPORTED_LANGUAGES
 from app.models.intake import IntakeMessage
 from app.services.audit_service import append_audit_event
 from app.services.case_service import facts_as_dict, get_case_or_404, upsert_fact
@@ -20,6 +20,9 @@ def submit_intake_message(
 ) -> dict:
     settings = get_settings()
     case = get_case_or_404(session, case_id)
+    if language not in SUPPORTED_LANGUAGES:
+        raise ValueError("Unsupported language. Supported languages are en and es.")
+    case.language = language
     redacted = redact_text(message)
     intake_message = IntakeMessage(
         case_id=case.id,
@@ -98,8 +101,8 @@ def confirm_case_fact(
             needs_review=False,
             risk_level=risk,
         )
-        if case.status == "intake_in_progress":
-            case.status = "intake_complete"
+        if case.status in {"created", "started"}:
+            case.status = "intake_in_progress"
             session.add(case)
             session.commit()
     append_audit_event(
@@ -126,4 +129,3 @@ def _safety_warnings(message: str) -> list[str]:
     if "medical advice" in text:
         warnings.append("CareBridge CA cannot provide diagnosis or treatment advice.")
     return warnings
-

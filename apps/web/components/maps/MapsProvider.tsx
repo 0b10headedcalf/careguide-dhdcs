@@ -2,7 +2,9 @@
 
 import { APIProvider } from "@vis.gl/react-google-maps";
 
-const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+const MAPS_API_KEY =
+  process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY ??
+  process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 /**
  * Wraps children in the Google Maps JS API context.

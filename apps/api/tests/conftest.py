@@ -9,10 +9,12 @@ from sqlmodel import SQLModel
 
 TEST_DB = Path(__file__).resolve().parent / "test_carebridge.db"
 TEST_CACHE_DIR = Path(os.environ.get("TMPDIR", "/tmp")) / "carebridge_test_official_cache"
+TEST_UPLOAD_DIR = Path(os.environ.get("TMPDIR", "/tmp")) / "carebridge_test_uploads"
 if TEST_DB.exists():
     TEST_DB.unlink()
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB}"
 os.environ["OFFICIAL_CACHE_DIR"] = str(TEST_CACHE_DIR)
+os.environ["UPLOAD_DIR"] = str(TEST_UPLOAD_DIR)
 
 from app.db.session import engine  # noqa: E402
 from app.main import app  # noqa: E402
@@ -22,11 +24,13 @@ from app.main import app  # noqa: E402
 def reset_db():
     engine.dispose()
     shutil.rmtree(TEST_CACHE_DIR, ignore_errors=True)
+    shutil.rmtree(TEST_UPLOAD_DIR, ignore_errors=True)
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
     yield
     SQLModel.metadata.drop_all(engine)
     shutil.rmtree(TEST_CACHE_DIR, ignore_errors=True)
+    shutil.rmtree(TEST_UPLOAD_DIR, ignore_errors=True)
 
 
 @pytest.fixture

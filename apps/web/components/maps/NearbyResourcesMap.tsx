@@ -12,8 +12,11 @@ import { useGeocoder } from "@/lib/coverage/geocode";
 export interface NearbyResource {
   id: string;
   name: string;
+  type: string;
   address: string;
   phone?: string;
+  source: string;
+  reasonRecommended: string;
   location: { lat: number; lng: number };
 }
 
@@ -25,7 +28,10 @@ const SEARCH_RADIUS_METERS = 8000;
 
 const DEFAULT_CENTER = { lat: 37.8044, lng: -122.2712 }; // Oakland, CA fallback
 
-const MAPS_ENABLED = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+const MAPS_ENABLED = Boolean(
+  process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY ??
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+);
 
 export function NearbyResourcesMap({ zip }: { zip: string }) {
   const geocode = useGeocoder();
@@ -64,12 +70,23 @@ export function NearbyResourcesMap({ zip }: { zip: string }) {
         });
 
         for (const place of places) {
-          if (!place.id || !place.location || merged.has(place.id)) continue;
+          if (
+            !place.id ||
+            !place.location ||
+            !place.displayName ||
+            !place.formattedAddress ||
+            merged.has(place.id)
+          ) {
+            continue;
+          }
           merged.set(place.id, {
             id: place.id,
-            name: place.displayName ?? "Unnamed location",
-            address: place.formattedAddress ?? "",
+            name: place.displayName,
+            type: type.replaceAll("_", " "),
+            address: place.formattedAddress,
             phone: place.nationalPhoneNumber ?? undefined,
+            source: "Google Places",
+            reasonRecommended: "Near the searched ZIP code.",
             location: { lat: place.location.lat(), lng: place.location.lng() }
           });
         }
@@ -152,8 +169,10 @@ export function NearbyResourcesMap({ zip }: { zip: string }) {
                   <InfoWindow position={r.location} onCloseClick={() => setSelectedId(null)}>
                     <div className="max-w-56 text-sm">
                       <p className="font-bold text-navy">{r.name}</p>
+                      <p className="text-slatecare">{r.type}</p>
                       {r.address ? <p className="text-slatecare">{r.address}</p> : null}
                       {r.phone ? <p className="text-slatecare">{r.phone}</p> : null}
+                      <p className="text-slatecare">Source: {r.source}</p>
                     </div>
                   </InfoWindow>
                 );
@@ -175,8 +194,11 @@ export function NearbyResourcesMap({ zip }: { zip: string }) {
                 className="text-left"
               >
                 <p className="font-extrabold text-navy">{r.name}</p>
+                <p className="text-sm capitalize text-slatecare">{r.type}</p>
                 {r.address ? <p className="text-sm text-slatecare">{r.address}</p> : null}
                 {r.phone ? <p className="text-sm text-slatecare">{r.phone}</p> : null}
+                <p className="text-sm text-slatecare">Source: {r.source}</p>
+                <p className="text-sm text-slatecare">{r.reasonRecommended}</p>
               </button>
             </li>
           ))}

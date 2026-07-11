@@ -3,6 +3,7 @@ from html import escape
 from sqlmodel import Session
 
 from app.core.constants import OFFICIAL_PACKET_TITLE
+from app.models.case import Case
 from app.models.handoff import HandoffPacket
 from app.services.case_service import case_detail
 from app.utils.dates import utc_now_iso
@@ -21,6 +22,11 @@ def create_handoff_packet(session: Session, case_id: str, user_reviewed: bool) -
         html_path_or_content_ref=html,
         source_list_json=dumps_json(_source_list(detail)),
     )
+    case = session.get(Case, case_id)
+    if case:
+        case.user_reviewed = True
+        case.status = "handoff_created"
+        session.add(case)
     session.add(packet)
     session.commit()
     session.refresh(packet)

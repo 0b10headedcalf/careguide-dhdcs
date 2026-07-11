@@ -1,5 +1,6 @@
 from app.models.audit import AuditEvent
 from app.models.case import Case, CaseFact, CaseResourceRecommendation
+from app.models.document import UploadedDocument
 from app.models.form import FormFieldValue, FormRoute
 from app.models.handoff import HandoffPacket
 from app.models.intake import IntakeMessage
@@ -12,6 +13,7 @@ __all__ = [
     "Case",
     "CaseFact",
     "CaseResourceRecommendation",
+    "UploadedDocument",
     "FormFieldValue",
     "FormRoute",
     "HandoffPacket",
@@ -20,4 +22,3 @@ __all__ = [
     "Resource",
     "SourceSnapshot",
 ]
-

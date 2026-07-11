@@ -9,7 +9,9 @@
 #   1. A DigitalOcean API token with App Platform read+write scope.
 #   2. That token stored as a repo secret named DIGITALOCEAN_ACCESS_TOKEN
 #      (Settings -> Secrets and variables -> Actions -> New repository secret).
-#   3. The app must exist on DO once. If .do/app.yaml has `name: careguide`,
+#   3. The rotated browser key stored as NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.
+#   4. CAREBRIDGE_SECRET_KEY and any Gradient credentials stored as secrets.
+#   5. The app must exist on DO once. If .do/app.yaml has `name: careguide`,
 #      the action will find the app by name and update it in place. If no
 #      matching app exists, it creates one from the spec.
 
@@ -38,6 +40,13 @@ jobs:
 
       - name: Deploy app spec to App Platform
         uses: digitalocean/app_action/deploy@v2
+        env:
+          CAREBRIDGE_SECRET_KEY: ${{ secrets.CAREBRIDGE_SECRET_KEY }}
+          GRADIENT_AGENT_ACCESS_KEY: ${{ secrets.GRADIENT_AGENT_ACCESS_KEY }}
+          GRADIENT_AGENT_ENDPOINT: ${{ secrets.GRADIENT_AGENT_ENDPOINT }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY }}
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           # app_spec_location defaults to .do/app.yaml, which is where our

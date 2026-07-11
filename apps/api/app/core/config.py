@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     DIGITALOCEAN_AGENT_ID: str = ""
     DIGITALOCEAN_AGENT_ENDPOINT: str = ""
     DIGITALOCEAN_AGENT_ENDPOINT_KEY: str = ""
+    GRADIENT_AGENT_ENDPOINT: str = ""
+    GRADIENT_AGENT_ACCESS_KEY: str = ""
+    ELEVENLABS_API_KEY: str = ""
+    ELEVENLABS_STT_MODEL: str = "scribe_v2"
 
     NVIDIA_API_KEY: str = ""
     NVIDIA_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
@@ -62,10 +66,12 @@ class Settings(BaseSettings):
     VAPI_SERVER_SECRET: str = ""
 
     GOOGLE_MAPS_SERVER_API_KEY: str = ""
+    GOOGLE_MAPS_API_KEY: str = ""
     GOOGLE_MAPS_RADIUS_METERS: int = 5000
 
     DATASF_APP_TOKEN: str = ""
     DATASF_HEALTH_FACILITIES_URL: str = "https://data.sfgov.org/resource/jhsu-2pka.json"
+    DATA_SF_HEALTH_FACILITIES_URL: str = ""
 
     HRSA_ARCGIS_QUERY_URL: str = (
         "https://gisportal.hrsa.gov/server/rest/services/"
@@ -90,6 +96,8 @@ class Settings(BaseSettings):
     UPLOADS_ENABLED: bool = False
     MAX_UPLOAD_SIZE_MB: int = 10
     LOCAL_UPLOAD_DIR: str = "./private_uploads"
+    UPLOAD_DIR: str = ".data/uploads"
+    MAX_UPLOAD_MB: int = 15
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

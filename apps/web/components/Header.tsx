@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCase } from "@/lib/coverage/case-context";
+import { friendlyApiMessage } from "@/lib/coverage/api";
 import type { Language } from "@/lib/coverage/types";
 import {
   ChevronDownIcon,
@@ -51,7 +52,24 @@ function HeaderButton({
 export function LanguageMenu({ align = "left" }: { align?: "left" | "right" }) {
   const { language, setLanguage } = useCase();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<unknown>(null);
+  const [pendingLanguage, setPendingLanguage] = useState<Language | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const chooseLanguage = async (option: Language) => {
+    setPendingLanguage(option);
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await setLanguage(option);
+      setOpen(false);
+    } catch (error) {
+      setSaveError(error);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -97,10 +115,8 @@ export function LanguageMenu({ align = "left" }: { align?: "left" | "right" }) {
               type="button"
               role="menuitemradio"
               aria-checked={language === option}
-              onClick={() => {
-                setLanguage(option);
-                setOpen(false);
-              }}
+              disabled={saving}
+              onClick={() => void chooseLanguage(option)}
               className={`flex min-h-11 w-full items-center justify-between rounded-lg px-3 text-left text-sm font-bold transition hover:bg-[#EAF0FF] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 language === option ? "text-primaryDark" : "text-navy"
               }`}
@@ -109,6 +125,19 @@ export function LanguageMenu({ align = "left" }: { align?: "left" | "right" }) {
               {language === option ? <span aria-hidden>✓</span> : null}
             </button>
           ))}
+          {saveError ? (
+            <div role="status" className="px-3 pb-2 pt-1 text-xs font-semibold leading-5 text-red-700">
+              <p>{friendlyApiMessage(saveError)}</p>
+              <button
+                type="button"
+                disabled={saving || !pendingLanguage}
+                onClick={() => pendingLanguage && void chooseLanguage(pendingLanguage)}
+                className="mt-1 font-bold text-primaryDark underline underline-offset-2"
+              >
+                Retry
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

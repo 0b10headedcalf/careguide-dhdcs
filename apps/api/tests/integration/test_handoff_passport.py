@@ -35,6 +35,9 @@ def test_handoff_generates_packet_and_returns_html_envelope(client, case_id):
     assert "packet_id" in data
     assert "html" in data
     assert data["user_reviewed"] is True
+    detail = client.get(f"/api/cases/{case_id}").json()["data"]
+    assert detail["user_reviewed"] is True
+    assert detail["status"] == "handoff_created"
     # Rendered packet must include the disclaimer and the CareBridge title
     assert "Not an official submission" in data["html"]
     assert "Handoff Passport" in data["html"]

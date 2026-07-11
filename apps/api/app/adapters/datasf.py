@@ -36,10 +36,11 @@ class DataSFAdapter:
             params = {"$limit": DEFAULT_UNFILTERED_LIMIT}
 
         async with httpx.AsyncClient(timeout=8, headers=headers) as client:
-            response = await client.get(settings.DATASF_HEALTH_FACILITIES_URL, params=params)
+            source_url = settings.DATA_SF_HEALTH_FACILITIES_URL or settings.DATASF_HEALTH_FACILITIES_URL
+            response = await client.get(source_url, params=params)
             response.raise_for_status()
             payload = response.json()
-        return [normalize_datasf_record(record, settings.DATASF_HEALTH_FACILITIES_URL) for record in payload]
+        return [normalize_datasf_record(record, source_url) for record in payload]
 
 
 def normalize_datasf_record(record: dict, source_url: str) -> dict:

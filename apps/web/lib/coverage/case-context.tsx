@@ -8,7 +8,7 @@ import {
   useMemo,
   useState
 } from "react";
-import { ensureCase, readStoredCaseId } from "./api";
+import { ensureCase, readStoredCaseId, updateCaseLanguage } from "./api";
 import { emptyCaseDraft, mergeCaseDraft, readCaseDraft } from "./storage";
 import type { CaseDraft, Language } from "./types";
 
@@ -19,7 +19,7 @@ type CaseContextValue = {
   loaded: boolean;
   language: Language;
   caseId: string | null;
-  setLanguage: (language: Language) => void;
+  setLanguage: (language: Language) => Promise<void>;
   updateDraft: (partial: Partial<CaseDraft>) => CaseDraft;
   /** Create or resume the backend case. Rejects when the backend is unreachable. */
   startOrResumeCase: () => Promise<string>;
@@ -45,11 +45,14 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setLanguage = useCallback(
-    (language: Language) => {
+    async (language: Language) => {
       // Language changes never reset the case — only the preference changes.
       updateDraft({ language });
+      if (caseId) {
+        await updateCaseLanguage(caseId, language);
+      }
     },
-    [updateDraft]
+    [caseId, updateDraft]
   );
 
   const startOrResumeCase = useCallback(async () => {

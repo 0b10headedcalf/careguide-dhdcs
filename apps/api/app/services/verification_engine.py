@@ -1,11 +1,12 @@
 from sqlmodel import Session
 
 from app.core.constants import HIGH_RISK_FACTS
-from app.services.case_service import list_case_facts
+from app.services.case_service import get_case_or_404, list_case_facts
 from app.services.field_mapper import FIELD_MAP
 
 
 def verify_packet(session: Session, case_id: str, form_id: str) -> dict:
+    case = get_case_or_404(session, case_id)
     facts = {fact.canonical_name: fact for fact in list_case_facts(session, case_id, confirmed_only=False)}
     blocking_flags: list[str] = []
     warnings: list[str] = []
@@ -24,9 +25,11 @@ def verify_packet(session: Session, case_id: str, form_id: str) -> dict:
         blocking_flags.append("CareBridge CA cannot create or apply a signature.")
     if "authorized_representative.appointment" in facts:
         blocking_flags.append("CareBridge CA cannot appoint itself as an authorized representative.")
+    case.status = "verification_needed" if blocking_flags else "ready_for_human_review"
+    session.add(case)
+    session.commit()
     return {
         "blocking_flags": blocking_flags,
         "warnings": warnings,
         "ready_for_handoff": not blocking_flags,
     }
-
