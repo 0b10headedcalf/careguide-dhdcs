@@ -55,6 +55,13 @@ services:
       - key: APP_ENV
         value: production
         scope: RUN_TIME
+      # validate_production() refuses to boot with the default SECRET_KEY.
+      # The key is not read anywhere else in the codebase — nothing signs or
+      # encrypts with it — so a non-secret placeholder satisfies the check.
+      # If the app ever starts using it, move this to an encrypted env var.
+      - key: SECRET_KEY
+        value: carebridge-hackathon-placeholder-key-unused-by-code
+        scope: RUN_TIME
       # DATABASE_URL uses ephemeral SQLite for the hackathon. Container
       # restarts wipe the DB; the cache seeder can be re-run. For a real
       # deployment attach managed Postgres via the DO dashboard and
@@ -66,9 +73,11 @@ services:
         value: "false"
         scope: RUN_TIME
       # Same-origin traffic never triggers CORS, so this list only needs
-      # to cover local development.
+      # to cover local development. Must be a JSON array: pydantic-settings
+      # json-decodes list-typed fields at the env-source layer, before any
+      # field_validator runs, so a bare comma-separated string crashes boot.
       - key: CORS_ORIGINS
-        value: "http://localhost:3000"
+        value: '["http://localhost:3000"]'
         scope: RUN_TIME
       - key: LOG_LEVEL
         value: INFO
