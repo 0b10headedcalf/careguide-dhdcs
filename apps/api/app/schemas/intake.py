@@ -18,6 +18,7 @@ class CaseDeltaSuggestion(BaseModel):
     confidence: float
     needs_review: bool
     explanation_simple: str
+    auto_confirmed: bool = False
 
 
 class IntakeMessageData(BaseModel):
@@ -26,6 +27,7 @@ class IntakeMessageData(BaseModel):
     confirmation_needed: bool
     warnings: list[str] = Field(default_factory=list)
     progress: dict[str, Any] = Field(default_factory=dict)
+    auto_confirmed_facts: list[str] = Field(default_factory=list)
 
 
 class IntakeConfirmRequest(BaseModel):

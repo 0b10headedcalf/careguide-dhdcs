@@ -3,7 +3,7 @@ from typing import Any
 from sqlmodel import Session
 
 from app.core.config import get_settings
-from app.core.constants import HIGH_RISK_FACTS
+from app.core.constants import AUTO_CONFIRM_MIN_CONFIDENCE, HIGH_RISK_FACTS
 from app.models.intake import IntakeMessage
 from app.services.audit_service import append_audit_event
 from app.services.case_service import facts_as_dict, get_case_or_404, upsert_fact
@@ -35,6 +35,26 @@ def submit_intake_message(
     session.refresh(intake_message)
 
     suggestions = deterministic_case_delta(message, intake_message.id)
+    auto_confirmed_names: list[str] = []
+    for suggestion in suggestions:
+        if _should_auto_confirm(suggestion):
+            upsert_fact(
+                session=session,
+                case_id=case.id,
+                canonical_name=suggestion["canonical_name"],
+                value=suggestion["suggested_value"],
+                source_type="agent_auto_confirmed",
+                source_ref=suggestion["source_ref"],
+                confidence=suggestion["confidence"],
+                confirmed_by_user=True,
+                needs_review=False,
+                risk_level="low",
+            )
+            suggestion["auto_confirmed"] = True
+            auto_confirmed_names.append(suggestion["canonical_name"])
+        else:
+            suggestion.setdefault("auto_confirmed", False)
+
     existing = facts_as_dict(session, case_id, confirmed_only=True)
     warnings = _safety_warnings(message)
     return {
@@ -43,7 +63,16 @@ def submit_intake_message(
         "confirmation_needed": any(item["needs_review"] for item in suggestions),
         "warnings": warnings,
         "progress": {"input_mode": input_mode, "suggestions": len(suggestions)},
+        "auto_confirmed_facts": auto_confirmed_names,
     }
+
+
+def _should_auto_confirm(suggestion: dict) -> bool:
+    if suggestion.get("needs_review"):
+        return False
+    if suggestion["canonical_name"] in HIGH_RISK_FACTS:
+        return False
+    return suggestion.get("confidence", 0.0) >= AUTO_CONFIRM_MIN_CONFIDENCE
 
 
 def confirm_case_fact(
