@@ -8,8 +8,12 @@ import type {
 } from "./types";
 import {
   ApiValidationError,
+  actionPlanSchema,
+  agentMessageSchema,
   caseCreatedSchema,
   caseDetailSchema,
+  documentListSchema,
+  documentSchema,
   handoffPacketSchema,
   intakeConfirmSchema,
   intakeMessageSchema,
@@ -17,11 +21,16 @@ import {
   nearbyResourcesSchema,
   pathwayResultSchema,
   triggeredFormsSchema,
+  transcriptionSchema,
   verifyPacketSchema,
   type CaseDetail,
+  type ActionPlan,
+  type AgentMessageResult,
   type HandoffPacket,
   type IntakeMessageResult,
   type PathwayResult,
+  type TranscriptionResult,
+  type UploadedDocument,
   type Validator,
   type VerifyPacketResult
 } from "./schemas";
@@ -58,6 +67,9 @@ export function friendlyApiMessage(error: unknown): string {
   }
   if (error instanceof ApiError && error.status === 404) {
     return "We couldn't find that case. You can start a new one.";
+  }
+  if (error instanceof ApiError && error.status === 400) {
+    return error.message;
   }
   if (error instanceof DOMException && error.name === "AbortError") {
     return "The service took too long to respond. Please try again.";
@@ -110,6 +122,39 @@ async function apiFetch<T>(
   }
 }
 
+async function apiMultipartFetch<T>(
+  path: string,
+  formData: FormData,
+  validate: Validator<T>,
+  signal?: AbortSignal
+): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS * 6);
+  const onExternalAbort = () => controller.abort();
+  signal?.addEventListener("abort", onExternalAbort);
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal
+    });
+    const body = await response.json().catch(() => null) as {
+      data?: unknown;
+      error?: { code?: string; message?: string };
+    } | null;
+    if (!response.ok || !body || body.error) {
+      throw new ApiError(body?.error?.message ?? `HTTP ${response.status}`, {
+        status: response.status,
+        code: body?.error?.code
+      });
+    }
+    return validate(body.data, "data");
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onExternalAbort);
+  }
+}
+
 /* ------------------------- case id persistence ------------------------- */
 /* localStorage may be unavailable (private mode, blocked). Fall back to
    in-memory state without surfacing an error to the user. */
@@ -147,13 +192,29 @@ export function clearStoredCaseId() {
 
 /* ------------------------------ API methods ----------------------------- */
 
-export async function createCase(language: Language): Promise<{ caseId: string }> {
+export async function createCase(
+  language: Language,
+  signal?: AbortSignal
+): Promise<{ caseId: string }> {
   const created = await apiFetch("/api/cases", caseCreatedSchema, {
     method: "POST",
     body: JSON.stringify({ language, explanation_style: "simple" })
-  });
+  }, signal);
   writeStoredCaseId(created.case_id);
   return { caseId: created.case_id };
+}
+
+export async function updateCaseLanguage(
+  caseId: string,
+  language: Language,
+  signal?: AbortSignal
+): Promise<void> {
+  await apiFetch(
+    `/api/cases/${encodeURIComponent(caseId)}`,
+    caseCreatedSchema,
+    { method: "PATCH", body: JSON.stringify({ language }) },
+    signal
+  );
 }
 
 export async function getCase(caseId: string, signal?: AbortSignal): Promise<CaseDetail> {
@@ -164,13 +225,16 @@ export async function getCase(caseId: string, signal?: AbortSignal): Promise<Cas
  * Return the active case id, creating a case when none exists. A stored id
  * the backend no longer recognizes (404) is discarded and replaced.
  */
-export async function ensureCase(language: Language): Promise<string> {
+export async function ensureCase(language: Language, signal?: AbortSignal): Promise<string> {
   const cached = readStoredCaseId();
   if (cached) {
     try {
-      await getCase(cached);
+      await getCase(cached, signal);
       return cached;
     } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
       if (error instanceof ApiError && error.status === 404) {
         clearStoredCaseId();
       } else {
@@ -179,7 +243,7 @@ export async function ensureCase(language: Language): Promise<string> {
       }
     }
   }
-  const created = await createCase(language);
+  const created = await createCase(language, signal);
   return created.caseId;
 }
 
@@ -187,29 +251,41 @@ export async function sendIntakeMessage(
   caseId: string,
   message: string,
   language: Language,
-  inputMode: "voice" | "text" = "text"
+  inputMode: "voice" | "text" = "text",
+  signal?: AbortSignal
 ): Promise<IntakeMessageResult> {
-  return apiFetch("/api/intake/message", intakeMessageSchema, {
-    method: "POST",
-    body: JSON.stringify({ case_id: caseId, message, language, input_mode: inputMode })
-  });
+  return apiFetch(
+    "/api/intake/message",
+    intakeMessageSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({ case_id: caseId, message, language, input_mode: inputMode })
+    },
+    signal
+  );
 }
 
 export async function saveIntakeAnswer(
   caseId: string,
   canonicalName: string,
   value: unknown,
-  confirmed: boolean
+  confirmed: boolean,
+  signal?: AbortSignal
 ) {
-  return apiFetch("/api/intake/confirm", intakeConfirmSchema, {
-    method: "POST",
-    body: JSON.stringify({
-      case_id: caseId,
-      canonical_name: canonicalName,
-      value,
-      confirmed
-    })
-  });
+  return apiFetch(
+    "/api/intake/confirm",
+    intakeConfirmSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        case_id: caseId,
+        canonical_name: canonicalName,
+        value,
+        confirmed
+      })
+    },
+    signal
+  );
 }
 
 export async function evaluateEligibility(caseId: string, signal?: AbortSignal): Promise<PathwayResult> {
@@ -268,17 +344,19 @@ export async function verifyPacket(
 }
 
 export async function searchNearbyResources(
-  query: { zip: string; lat?: number; lng?: number; language?: Language },
+  caseId: string | null,
+  location: { zip: string; lat?: number; lng?: number },
+  language: Language,
   signal?: AbortSignal
 ): Promise<ResourceSearchResult[]> {
-  const params = new URLSearchParams({ zip: query.zip.trim() });
+  const params = new URLSearchParams({ zip: location.zip.trim(), language });
   // The backend has no server-side ZIP geocoder, so the browser geocodes the
   // ZIP (Google key permitting) and passes coordinates explicitly.
-  if (query.lat !== undefined && query.lng !== undefined) {
-    params.set("lat", String(query.lat));
-    params.set("lng", String(query.lng));
+  if (caseId) params.set("case_id", caseId);
+  if (location.lat !== undefined && location.lng !== undefined) {
+    params.set("lat", String(location.lat));
+    params.set("lng", String(location.lng));
   }
-  if (query.language) params.set("language", query.language);
   const result = await apiFetch(
     `/api/resources/nearby?${params.toString()}`,
     nearbyResourcesSchema,
@@ -302,15 +380,110 @@ export async function searchNearbyResources(
   }));
 }
 
+export async function generateActionPlan(
+  caseId: string,
+  signal?: AbortSignal
+): Promise<ActionPlan> {
+  return apiFetch(
+    `/api/cases/${encodeURIComponent(caseId)}/action-plan`,
+    actionPlanSchema,
+    {},
+    signal
+  );
+}
+
+export async function sendAgentMessage(
+  caseId: string,
+  message: string,
+  language: Language,
+  explanationLevel: "simple" | "standard" | "detailed",
+  formId?: string,
+  signal?: AbortSignal
+): Promise<AgentMessageResult> {
+  return apiFetch(
+    "/api/agent/message",
+    agentMessageSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        case_id: caseId,
+        message,
+        language,
+        explanation_level: explanationLevel,
+        form_id: formId,
+        debug: process.env.NEXT_PUBLIC_ENABLE_AGENT_DEBUG === "true"
+      })
+    },
+    signal
+  );
+}
+
+export async function transcribeAudio(
+  caseId: string,
+  audio: Blob,
+  language: Language,
+  signal?: AbortSignal
+): Promise<TranscriptionResult> {
+  const form = new FormData();
+  form.append("file", audio, "careguide-recording.webm");
+  form.append("case_id", caseId);
+  form.append("language_code", language);
+  return apiMultipartFetch("/api/voice/transcribe", form, transcriptionSchema, signal);
+}
+
+export async function uploadDocument(
+  caseId: string,
+  file: File,
+  documentType: string,
+  signal?: AbortSignal
+): Promise<UploadedDocument> {
+  const form = new FormData();
+  form.append("case_id", caseId);
+  form.append("document_type", documentType);
+  form.append("file", file);
+  return apiMultipartFetch("/api/documents/upload", form, documentSchema, signal);
+}
+
+export async function getDocuments(
+  caseId: string,
+  signal?: AbortSignal
+): Promise<UploadedDocument[]> {
+  const result = await apiFetch(
+    `/api/cases/${encodeURIComponent(caseId)}/documents`,
+    documentListSchema,
+    {},
+    signal
+  );
+  return result.documents;
+}
+
+export async function confirmDocument(
+  documentId: string,
+  confirmed: boolean,
+  signal?: AbortSignal
+): Promise<UploadedDocument> {
+  return apiFetch(
+    `/api/documents/${encodeURIComponent(documentId)}/confirm`,
+    documentSchema,
+    { method: "POST", body: JSON.stringify({ confirmed }) },
+    signal
+  );
+}
+
 /**
  * Create the counselor handoff packet. The backend requires the user to have
  * reviewed their information first; callers must gate on an explicit review.
  */
-export async function exportPacket(caseId: string): Promise<HandoffPacket> {
-  return apiFetch("/api/handoff-passport", handoffPacketSchema, {
-    method: "POST",
-    body: JSON.stringify({ case_id: caseId, user_reviewed: true })
-  });
+export async function exportPacket(caseId: string, signal?: AbortSignal): Promise<HandoffPacket> {
+  return apiFetch(
+    "/api/handoff-passport",
+    handoffPacketSchema,
+    {
+      method: "POST",
+      body: JSON.stringify({ case_id: caseId, user_reviewed: true })
+    },
+    signal
+  );
 }
 
 /** Printable HTML view of a created handoff packet, served by the backend. */
@@ -321,9 +494,13 @@ export function handoffPacketHtmlUrl(packetId: string): string {
 /* --------------------- composite frontend operations --------------------- */
 
 /** Push every fact present in the local draft to the backend (idempotent). */
-export async function syncDraftFacts(caseId: string, draft: CaseDraft): Promise<void> {
+export async function syncDraftFacts(
+  caseId: string,
+  draft: CaseDraft,
+  signal?: AbortSignal
+): Promise<void> {
   for (const [canonicalName, value] of draftToConfirmations(draft)) {
-    await saveIntakeAnswer(caseId, canonicalName, value, true);
+    await saveIntakeAnswer(caseId, canonicalName, value, true, signal);
   }
 }
 
@@ -350,9 +527,13 @@ export function draftToConfirmations(draft: CaseDraft): Array<[string, unknown]>
  */
 export async function getDocumentChecklist(
   caseId: string,
-  draft: CaseDraft | null
+  draft: CaseDraft | null,
+  signal?: AbortSignal
 ): Promise<DocumentChecklistEntry[]> {
-  const forms = await routeForms(caseId);
+  const [forms, documents] = await Promise.all([
+    routeForms(caseId, signal),
+    getDocuments(caseId, signal)
+  ]);
   const formIds = new Set(forms.map((form) => form.form_id));
   const entries: DocumentChecklistEntry[] = [
     {
@@ -382,12 +563,22 @@ export async function getDocumentChecklist(
       explanation: "Job-based coverage was flagged for this case, so those details should be reviewed."
     });
   }
-  if (formIds.has("income_attestation")) {
+  if (formIds.has("INCOME_ATTESTATION")) {
     entries.push({
       id: "income_attestation",
       title: "Income attestation",
       status: "May be requested",
       explanation: "Irregular or hard-to-prove income can be covered by a signed attestation."
+    });
+  }
+  for (const document of documents) {
+    entries.push({
+      id: `document-${document.document_id}`,
+      title: document.filename,
+      status: document.confirmed_by_user ? "Added" : "May be requested",
+      explanation: document.confirmed_by_user
+        ? "Uploaded and confirmed by you for use in this review packet."
+        : "Uploaded successfully. Confirm it before CareGuide uses extracted information."
     });
   }
   const attestations = draft?.docStatus ?? {};

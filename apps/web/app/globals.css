@@ -106,6 +106,15 @@ a:focus-visible {
   animation: none;
 }
 
+.mission-orb[data-state="listening"] {
+  animation: voice-orb-listening 1.4s ease-in-out infinite;
+}
+
+.mission-orb[data-state="transcribing"],
+.mission-orb[data-state="thinking"] {
+  animation: voice-orb-processing 3.8s linear infinite;
+}
+
 @keyframes voice-listening {
   0%,
   100% {

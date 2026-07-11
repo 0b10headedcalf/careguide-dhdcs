@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { CaseDraft } from "./types";
 
 const CASE_DRAFT_KEY = "careguide.caseDraft.v1";
+let memoryDraft: CaseDraft | null = null;
 
 export const emptyCaseDraft: CaseDraft = {
   language: "en",
@@ -15,31 +16,43 @@ export function readCaseDraft(): CaseDraft | null {
     return null;
   }
 
-  const rawDraft = window.localStorage.getItem(CASE_DRAFT_KEY);
+  let rawDraft: string | null;
+  try {
+    rawDraft = window.localStorage.getItem(CASE_DRAFT_KEY);
+  } catch {
+    return memoryDraft;
+  }
   if (!rawDraft) {
-    return null;
+    return memoryDraft;
   }
 
   try {
     const parsedDraft = JSON.parse(rawDraft) as CaseDraft;
-    return {
+    const parsed = {
       ...emptyCaseDraft,
       ...parsedDraft,
       confirmedFields: Array.isArray(parsedDraft.confirmedFields)
         ? parsedDraft.confirmedFields
         : []
     };
+    memoryDraft = parsed;
+    return parsed;
   } catch {
-    return null;
+    return memoryDraft;
   }
 }
 
 export function writeCaseDraft(draft: CaseDraft) {
+  memoryDraft = draft;
   if (typeof window === "undefined") {
     return;
   }
 
-  window.localStorage.setItem(CASE_DRAFT_KEY, JSON.stringify(draft));
+  try {
+    window.localStorage.setItem(CASE_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // The in-memory copy keeps the current session usable.
+  }
 }
 
 export function mergeCaseDraft(partialDraft: Partial<CaseDraft>) {
@@ -76,4 +89,3 @@ export function useCaseDraft() {
 
   return { draft, loaded, saveDraft, updateDraft };
 }
-

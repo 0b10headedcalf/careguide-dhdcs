@@ -12,10 +12,9 @@ services:
   - name: web
     dockerfile_path: apps/web/Dockerfile
     source_dir: /
-    github:
-      repo: 0b10headedcalf/careguide-dhdcs
+    git:
+      repo_clone_url: https://github.com/0b10headedcalf/careguide-dhdcs.git
       branch: main
-      deploy_on_push: true
     http_port: 8080
     instance_count: 1
     instance_size_slug: basic-xxs
@@ -30,19 +29,31 @@ services:
       - key: NEXT_PUBLIC_API_BASE_URL
         scope: RUN_AND_BUILD_TIME
         value: ""
-      # Referrer-locked at the Google Cloud console, so shipping in the
-      # bundle is acceptable for this deploy.
-      - key: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+      # Injected by the deploy workflow from the repository secret after the
+      # browser-restricted key is rotated. The value must never be committed.
+      - key: NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY
         scope: RUN_AND_BUILD_TIME
-        value: AIzaSyDL1YdpBJQWEOM0RfJbZWbFjVKl80DF4UM
+        type: SECRET
+        value: ${NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY}
+      - key: NEXT_PUBLIC_APP_NAME
+        scope: RUN_AND_BUILD_TIME
+        value: CareGuide
+      - key: NEXT_PUBLIC_ENABLE_VOICE
+        scope: RUN_AND_BUILD_TIME
+        value: "true"
+      - key: NEXT_PUBLIC_ENABLE_DOC_UPLOAD
+        scope: RUN_AND_BUILD_TIME
+        value: "true"
+      - key: NEXT_PUBLIC_ENABLE_AGENT_DEBUG
+        scope: RUN_AND_BUILD_TIME
+        value: "false"
 
   - name: api
     dockerfile_path: apps/api/Dockerfile
     source_dir: /
-    github:
-      repo: 0b10headedcalf/careguide-dhdcs
+    git:
+      repo_clone_url: https://github.com/0b10headedcalf/careguide-dhdcs.git
       branch: main
-      deploy_on_push: true
     http_port: 8000
     instance_count: 1
     instance_size_slug: basic-xxs
@@ -55,13 +66,10 @@ services:
       - key: APP_ENV
         value: production
         scope: RUN_TIME
-      # validate_production() refuses to boot with the default SECRET_KEY.
-      # The key is not read anywhere else in the codebase — nothing signs or
-      # encrypts with it — so a non-secret placeholder satisfies the check.
-      # If the app ever starts using it, move this to an encrypted env var.
       - key: SECRET_KEY
-        value: carebridge-hackathon-placeholder-key-unused-by-code
+        value: ${CAREBRIDGE_SECRET_KEY}
         scope: RUN_TIME
+        type: SECRET
       # DATABASE_URL uses ephemeral SQLite for the hackathon. Container
       # restarts wipe the DB; the cache seeder can be re-run. For a real
       # deployment attach managed Postgres via the DO dashboard and
@@ -88,19 +96,44 @@ services:
       - key: STORE_RAW_INTAKE_MESSAGES
         value: "false"
         scope: RUN_TIME
-      # Optional keys — leave empty unless the dashboard sets them. The API
-      # ships mock fallbacks / graceful empty responses when a key is
-      # missing, so an unfilled key here degrades gracefully rather than
-      # crashing.
+      # Optional keys degrade to honest empty/unavailable responses.
       - key: NVIDIA_API_KEY
         value: ""
         scope: RUN_TIME
       - key: DIGITALOCEAN_API_TOKEN
         value: ""
         scope: RUN_TIME
+      - key: GRADIENT_AGENT_ENDPOINT
+        value: ${GRADIENT_AGENT_ENDPOINT}
+        scope: RUN_TIME
+        type: SECRET
+      - key: GRADIENT_AGENT_ACCESS_KEY
+        value: ${GRADIENT_AGENT_ACCESS_KEY}
+        scope: RUN_TIME
+        type: SECRET
+      - key: ELEVENLABS_API_KEY
+        value: ${ELEVENLABS_API_KEY}
+        scope: RUN_TIME
+        type: SECRET
+      - key: ELEVENLABS_STT_MODEL
+        value: scribe_v2
+        scope: RUN_TIME
+      - key: UPLOAD_DIR
+        value: .data/uploads
+        scope: RUN_TIME
+      - key: MAX_UPLOAD_MB
+        value: "15"
+        scope: RUN_TIME
+      - key: DATA_SF_HEALTH_FACILITIES_URL
+        value: https://data.sfgov.org/resource/jhsu-2pka.json
+        scope: RUN_TIME
       - key: GOOGLE_MAPS_SERVER_API_KEY
         value: ""
         scope: RUN_TIME
+      - key: GOOGLE_MAPS_API_KEY
+        value: ${GOOGLE_MAPS_API_KEY}
+        scope: RUN_TIME
+        type: SECRET
       - key: DATASF_APP_TOKEN
         value: ""
         scope: RUN_TIME

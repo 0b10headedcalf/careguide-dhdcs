@@ -27,6 +27,7 @@ import {
   ensureCase,
   evaluateEligibility,
   exportPacket,
+  generateActionPlan,
   handoffPacketHtmlUrl,
   getCase,
   getDocumentChecklist,
@@ -285,7 +286,7 @@ function useEntryMode(): "voice" | "text" | null {
 
 export function IntakeFlowPage() {
   const router = useRouter();
-  const { draft, loaded, language, updateDraft } = useCase();
+  const { draft, loaded, language, setLanguage, updateDraft } = useCase();
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -335,6 +336,13 @@ export function IntakeFlowPage() {
     }
   }, [entryMode, questionIndex]);
 
+  useEffect(() => {
+    if (speech.status === "unsupported") {
+      router.replace("/coverage/intake?mode=text");
+      answerInputRef.current?.focus();
+    }
+  }, [router, speech.status]);
+
   const saveCurrentAnswer = (confirmed: boolean) => {
     const base = draft ?? { language: "en", confirmedFields: [] };
     const confirmedFields = confirmed
@@ -344,6 +352,9 @@ export function IntakeFlowPage() {
       ...parseIntakeAnswer(question, answer),
       confirmedFields
     });
+    if (question.id === "language") {
+      void setLanguage(nextDraft.language).catch(() => setSyncState("offline"));
+    }
 
     // Persist the fact on the backend case. Failure never blocks the flow —
     // answers stay in the local draft and are re-synced before evaluation.
@@ -521,20 +532,22 @@ export function ResultsPage() {
     if (!loaded || !draft) return;
     if (!draft.zip && !draft.householdSize) return;
     let cancelled = false;
+    const controller = new AbortController();
     setError(null);
     setPreview(null);
     (async () => {
-      const caseId = await ensureCase(draft.language);
+      const caseId = await ensureCase(draft.language, controller.signal);
       // Idempotent re-sync: guarantees the engine sees every local answer,
       // including any that failed to save while the backend was unreachable.
-      await syncDraftFacts(caseId, draft);
-      const result = await evaluateEligibility(caseId);
+      await syncDraftFacts(caseId, draft, controller.signal);
+      const result = await evaluateEligibility(caseId, controller.signal);
       if (!cancelled) setPreview(pathwayToPreview(result));
     })().catch((err) => {
-      if (!cancelled) setError(err);
+      if (!cancelled && !(err instanceof DOMException && err.name === "AbortError")) setError(err);
     });
     return () => {
       cancelled = true;
+      controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, attempt]);
@@ -637,17 +650,19 @@ export function DocumentsPage() {
   useEffect(() => {
     if (!loaded) return;
     let cancelled = false;
+    const controller = new AbortController();
     setError(null);
     (async () => {
-      const caseId = await ensureCase(draft?.language ?? "en");
-      if (draft) await syncDraftFacts(caseId, draft);
-      const entries = await getDocumentChecklist(caseId, draft);
+      const caseId = await ensureCase(draft?.language ?? "en", controller.signal);
+      if (draft) await syncDraftFacts(caseId, draft, controller.signal);
+      const entries = await getDocumentChecklist(caseId, draft, controller.signal);
       if (!cancelled) setChecklist(entries);
     })().catch((err) => {
-      if (!cancelled) setError(err);
+      if (!cancelled && !(err instanceof DOMException && err.name === "AbortError")) setError(err);
     });
     return () => {
       cancelled = true;
+      controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, attempt, draft?.docStatus]);
@@ -738,26 +753,28 @@ export function ApplicationPage() {
       return;
     }
     let cancelled = false;
+    const controller = new AbortController();
     setError(null);
     (async () => {
-      const caseId = await ensureCase(draft.language);
+      const caseId = await ensureCase(draft.language, controller.signal);
       caseIdRef.current = caseId;
-      await syncDraftFacts(caseId, draft);
-      const forms = await routeForms(caseId);
+      await syncDraftFacts(caseId, draft, controller.signal);
+      const forms = await routeForms(caseId, controller.signal);
       const primary =
         forms.find((form) => form.form_id === PRIMARY_FORM_ID)?.form_id ??
         forms[0]?.form_id ??
         PRIMARY_FORM_ID;
-      const mappedFields = await getFormFields(caseId, primary);
+      const mappedFields = await getFormFields(caseId, primary, controller.signal);
       if (cancelled) return;
       setFormId(primary);
       setFields(mappedFields);
       setAnswer(mappedFields[0]?.value === null ? "" : String(mappedFields[0]?.value ?? ""));
     })().catch((err) => {
-      if (!cancelled) setError(err);
+      if (!cancelled && !(err instanceof DOMException && err.name === "AbortError")) setError(err);
     });
     return () => {
       cancelled = true;
+      controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, attempt]);
@@ -954,21 +971,20 @@ export function ReviewPage() {
   useEffect(() => {
     if (!loaded) return;
     let cancelled = false;
+    const controller = new AbortController();
     setError(null);
     setStatus("loading");
     (async () => {
-      const caseId = await ensureCase(draft?.language ?? "en");
+      const caseId = await ensureCase(draft?.language ?? "en", controller.signal);
       caseIdRef.current = caseId;
-      if (draft) await syncDraftFacts(caseId, draft);
-      const forms = await routeForms(caseId);
+      if (draft) await syncDraftFacts(caseId, draft, controller.signal);
+      const forms = await routeForms(caseId, controller.signal);
       const primary =
         forms.find((form) => form.form_id === PRIMARY_FORM_ID)?.form_id ??
         forms[0]?.form_id ??
         PRIMARY_FORM_ID;
-      const [mappedFields, verification] = await Promise.all([
-        getFormFields(caseId, primary),
-        verifyPacket(caseId, primary)
-      ]);
+      const mappedFields = await getFormFields(caseId, primary, controller.signal);
+      const verification = await verifyPacket(caseId, primary, controller.signal);
       if (cancelled) return;
       setFields(mappedFields);
       setBlockingFlags(verification.blocking_flags);
@@ -976,10 +992,11 @@ export function ReviewPage() {
       setReady(verification.ready_for_handoff);
       setStatus("done");
     })().catch((err) => {
-      if (!cancelled) setError(err);
+      if (!cancelled && !(err instanceof DOMException && err.name === "AbortError")) setError(err);
     });
     return () => {
       cancelled = true;
+      controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, attempt]);
@@ -1052,14 +1069,24 @@ export function ReviewPage() {
               key={field.id}
               className="grid grid-cols-1 gap-2 border-b border-[rgba(16,32,79,0.08)] px-5 py-4 text-base md:grid-cols-4"
             >
-              <span className="font-extrabold text-navy">{field.plainLanguageLabel}</span>
+              <span className="text-navy">
+                <span className="block font-extrabold">{field.officialFieldLabel}</span>
+                <span className="mt-1 block text-sm text-slatecare">
+                  {field.plainLanguageLabel}
+                </span>
+              </span>
               <span className="text-slatecare">{field.value === null ? "Missing" : String(field.value)}</span>
               <span className="text-slatecare">
                 {field.sourceType.replace("_", " ")}
                 {typeof field.confidence === "number" ? ` · ${Math.round(field.confidence * 100)}%` : ""}
               </span>
-              <span className="font-extrabold text-primaryDark">
-                {field.needsReview ? "Needs review" : "Reviewed"}
+              <span className="text-primaryDark">
+                <span className="block font-extrabold">
+                  {field.needsReview ? "Needs review" : "Reviewed"}
+                </span>
+                <span className="mt-1 block text-sm font-semibold leading-5 text-slatecare">
+                  {field.explanation}
+                </span>
               </span>
             </div>
           ))}
@@ -1087,7 +1114,10 @@ export function ReviewPage() {
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <SecondaryButton href="/coverage/application">Fix missing items</SecondaryButton>
           <PrimaryButton href="/coverage/help">Continue to local help</PrimaryButton>
-          <SecondaryButton onClick={() => void downloadPacket()}>
+          <SecondaryButton
+            disabled={!reviewedByUser || exporting}
+            onClick={() => void downloadPacket()}
+          >
             {exporting
               ? "Preparing packet…"
               : reviewedByUser
@@ -1106,7 +1136,7 @@ type ResourceStatus = "idle" | "loading" | "empty" | "error" | "success";
 
 export function HelpPage() {
   const router = useRouter();
-  const { draft, language } = useCase();
+  const { draft, language, caseId, startOrResumeCase } = useCase();
   const geocode = useGeocoder();
   const [zip, setZip] = useState("");
   const [resources, setResources] = useState<ResourceSearchResult[]>([]);
@@ -1137,13 +1167,15 @@ export function HelpPage() {
         // the Maps key is available. Without it, the ZIP-only call returns an
         // honest empty result rather than fabricated entries.
         const geo = geocode ? await geocode(targetZip) : null;
+        const activeCaseId = caseId ?? (await startOrResumeCase());
         const list = await searchNearbyResources(
+          activeCaseId,
           {
             zip: targetZip,
             lat: geo?.lat,
-            lng: geo?.lng,
-            language
+            lng: geo?.lng
           },
+          language,
           signal
         );
         setResources(list);
@@ -1154,7 +1186,7 @@ export function HelpPage() {
         setResourceStatus("error");
       }
     },
-    [geocode, language]
+    [caseId, geocode, language, startOrResumeCase]
   );
 
   // Debounced live search as the ZIP changes.
@@ -1337,23 +1369,28 @@ export function DashboardPage() {
   useEffect(() => {
     if (!loaded || !caseId) return;
     let cancelled = false;
+    const controller = new AbortController();
     setError(null);
-    getCase(caseId)
-      .then((caseDetail) => {
+    Promise.all([
+      getCase(caseId, controller.signal),
+      generateActionPlan(caseId, controller.signal)
+    ])
+      .then(([caseDetail, actionPlan]) => {
         if (cancelled) return;
         setDetail({
           pathway: caseDetail.latest_pathway_result?.pathway ?? null,
           intakeComplete: caseDetail.progress_summary?.intake_complete ?? null,
-          nextAction: caseDetail.progress_summary?.next_action ?? null,
+          nextAction: actionPlan.next_action,
           userReviewed: caseDetail.user_reviewed ?? false,
-          status: caseDetail.status
+          status: actionPlan.status
         });
       })
       .catch((err) => {
-        if (!cancelled) setError(err);
+        if (!cancelled && !(err instanceof DOMException && err.name === "AbortError")) setError(err);
       });
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [loaded, caseId, attempt]);
 
@@ -1434,7 +1471,9 @@ export function DashboardPage() {
             <PrimaryButton
               href={
                 detail
-                  ? nextRouteForState(caseStateFromBackend(detail.status))
+                  ? detail.status === "intake_in_progress" && detail.intakeComplete
+                    ? "/coverage/results"
+                    : nextRouteForState(caseStateFromBackend(detail.status))
                   : intakeComplete
                     ? "/coverage/documents"
                     : "/coverage/intake"

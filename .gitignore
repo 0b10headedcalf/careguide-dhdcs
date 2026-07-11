@@ -15,6 +15,7 @@ carebridge.db
 *.sqlite
 *.sqlite3
 private_uploads/
+.data/
 .next/
 node_modules/
 *.tsbuildinfo

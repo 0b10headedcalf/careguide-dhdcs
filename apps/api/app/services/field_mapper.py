@@ -3,7 +3,7 @@ from typing import Any
 from sqlmodel import Session
 
 from app.models.form import FormFieldValue
-from app.services.case_service import list_case_facts
+from app.services.case_service import get_case_or_404, list_case_facts
 from app.utils.json import dumps_json, loads_json
 
 
@@ -19,6 +19,7 @@ FIELD_MAP = {
 
 
 def map_fields_for_form(session: Session, case_id: str, form_id: str) -> dict:
+    case = get_case_or_404(session, case_id)
     facts = {fact.canonical_name: fact for fact in list_case_facts(session, case_id, confirmed_only=False)}
     fields = []
     for canonical_name, (official_label, default_risk) in FIELD_MAP.items():
@@ -54,6 +55,9 @@ def map_fields_for_form(session: Session, case_id: str, form_id: str) -> dict:
                 "explanation_simple": field.explanation_simple,
             }
         )
+    case.status = "form_drafted"
+    session.add(case)
+    session.commit()
     return {"form_id": form_id, "fields": fields}
 
 
@@ -61,4 +65,3 @@ def _explanation(canonical_name: str, value: Any, present: bool) -> str:
     if not present:
         return f"No confirmed value is available for {canonical_name}; this field needs review."
     return f"Based on the information provided, this maps {canonical_name} to a reviewable form field."
-
