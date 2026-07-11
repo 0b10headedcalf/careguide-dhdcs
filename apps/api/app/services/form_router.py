@@ -35,6 +35,10 @@ def route_forms_for_case(session: Session, case_id: str) -> list[dict]:
                 "reason": route.route_reason,
                 "official_url": route.official_url,
                 "source_id": route.source_id,
+                "source_type": form.get("source_type", "official_website"),
+                "is_preview": bool(form.get("is_preview", False)),
+                "preview_disclaimer": form.get("preview_disclaimer"),
+                "maps_to_form_id": form.get("maps_to_form_id"),
                 "retrieved_at": route.retrieved_at.isoformat(),
                 "status": route.status,
             }

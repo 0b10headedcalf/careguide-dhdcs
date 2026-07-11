@@ -40,6 +40,16 @@
     "fields_used": ["facility_name", "facility_type", "services", "location", "point"]
   },
   {
+    "source_id": "carebridge_preview",
+    "name": "CareBridge Preview Worksheet",
+    "source_type": "carebridge_generated",
+    "base_url": "internal://carebridge/preview",
+    "official": false,
+    "cache_policy": "not_cached",
+    "default_ttl_hours": 0,
+    "fields_used": ["employer coverage questions mirroring CCFRM604 Employer-Sponsored Coverage section"]
+  },
+  {
     "source_id": "google_maps",
     "name": "Google Maps Platform",
     "source_type": "supplemental_api",

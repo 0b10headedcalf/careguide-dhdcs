@@ -14,17 +14,21 @@
     "active": true
   },
   {
-    "form_id": "EMPLOYER_COVERAGE_SECTION",
-    "name": "Employer coverage information",
-    "description": "Employer coverage section used when job-based coverage may be available.",
-    "official_url": "https://www.coveredca.com/support/forms/",
-    "source_id": "covered_ca_forms",
-    "source_type": "official_website",
+    "form_id": "EMPLOYER_COVERAGE_PREVIEW",
+    "name": "Employer Coverage Preview Worksheet (CareBridge)",
+    "description": "CareBridge-generated worksheet to help you gather the employer coverage information the official CCFRM604 application will ask for. This is NOT an official Covered California form.",
+    "official_url": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf",
+    "source_id": "carebridge_preview",
+    "source_type": "carebridge_generated",
     "supported_languages": ["en", "es"],
     "official_urls_by_language": {
-      "en": "https://www.coveredca.com/support/forms/",
-      "es": "https://www.coveredca.com/espanol/support/forms/"
+      "en": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf",
+      "es": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf"
     },
+    "is_preview": true,
+    "preview_disclaimer": "CareBridge-generated worksheet. Not an official Covered California form. The answers you gather here feed into the employer coverage section of the official CCFRM604 application.",
+    "maps_to_form_id": "CCFRM604",
+    "maps_to_section": "Employer-Sponsored Coverage",
     "last_verified_at": "2026-07-11T00:00:00Z",
     "active": true
   },

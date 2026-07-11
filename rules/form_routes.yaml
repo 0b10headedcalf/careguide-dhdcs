@@ -11,8 +11,8 @@ rules:
           operator: in
           value: ["medi_cal_likely", "covered_ca_likely", "human_review"]
   - id: form_route_employer_coverage_001
-    form_id: EMPLOYER_COVERAGE_SECTION
-    reason: Employer coverage information should be reviewed.
+    form_id: EMPLOYER_COVERAGE_PREVIEW
+    reason: A CareBridge worksheet helps you gather the employer coverage details the official CCFRM604 application will ask for.
     when:
       any:
         - field: employer.coverage_offer
