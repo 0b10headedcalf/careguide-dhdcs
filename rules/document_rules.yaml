@@ -1,0 +1,22 @@
+documents:
+  - id: proof_of_income
+    title: Proof of income
+    why_needed: Income must be reviewed before preparing an application packet.
+    required_when:
+      - income.estimate
+  - id: employer_coverage
+    title: Employer coverage information
+    why_needed: Employer coverage details may affect the application packet.
+    required_when:
+      - employer.coverage_offer
+  - id: identity
+    title: Identification
+    why_needed: Identity information may be requested during official review.
+    required_when:
+      - location.zip
+  - id: tax_household
+    title: Tax household information
+    why_needed: Household details help prepare reviewable fields.
+    required_when:
+      - household.size
+
