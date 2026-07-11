@@ -48,6 +48,46 @@ type BackendResource = {
  * Returns [] on any failure so the caller can render an honest empty state
  * rather than a crash.
  */
+export type HandoffPassportResult = {
+  packetId: string;
+  htmlViewUrl: string;
+};
+
+/**
+ * Generate a handoff passport for the current case. POSTs to the backend to
+ * create the packet, then returns the URL where the raw HTML can be opened
+ * and printed. Assumes the user has already reviewed the packet contents on
+ * the review screen — the backend refuses to generate without user_reviewed
+ * = true.
+ */
+export async function generateHandoffPassport(): Promise<HandoffPassportResult | null> {
+  const caseId = typeof window !== "undefined" ? window.localStorage.getItem(CASE_ID_KEY) : null;
+  if (!caseId) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/handoff-passport`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ case_id: caseId, user_reviewed: true }),
+      signal: controller.signal
+    });
+    const body = (await response.json()) as
+      | { data: { packet_id: string } }
+      | { error: { message: string } };
+    if (!response.ok || "error" in body) return null;
+    return {
+      packetId: body.data.packet_id,
+      htmlViewUrl: `${API_BASE_URL}/api/handoff-passport/${body.data.packet_id}/html`
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function fetchNearbyResources(zip: string): Promise<ResourceSearchResult[]> {
   if (!zip.trim()) return [];
   const controller = new AbortController();
