@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     NVIDIA_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
     NVIDIA_MODEL_ID: str = ""
 
+    ELEVENLABS_API_KEY: str = ""
+    ELEVENLABS_STT_MODEL_ID: str = "scribe_v1"
+    ELEVENLABS_STT_URL: str = "https://api.elevenlabs.io/v1/speech-to-text"
+
     VAPI_PUBLIC_KEY: str = ""
     VAPI_PRIVATE_KEY: str = ""
     VAPI_ASSISTANT_ID_EN: str = ""

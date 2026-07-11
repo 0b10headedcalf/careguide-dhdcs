@@ -38,6 +38,12 @@ jobs:
 
       - name: Deploy app spec to App Platform
         uses: digitalocean/app_action/deploy@v2
+        env:
+          # Substituted into ${VAR} placeholders in .do/app.yaml. Add these
+          # as repo secrets (Settings -> Secrets and variables -> Actions).
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          DIGITALOCEAN_AGENT_ENDPOINT: ${{ secrets.DIGITALOCEAN_AGENT_ENDPOINT }}
+          DIGITALOCEAN_AGENT_ENDPOINT_KEY: ${{ secrets.DIGITALOCEAN_AGENT_ENDPOINT_KEY }}
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           # app_spec_location defaults to .do/app.yaml, which is where our

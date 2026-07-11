@@ -92,6 +92,21 @@ services:
       # ships mock fallbacks / graceful empty responses when a key is
       # missing, so an unfilled key here degrades gracefully rather than
       # crashing.
+      # Voice + agent keys are injected by the deploy workflow from GitHub
+      # repo secrets (${VAR} placeholders are substituted by
+      # digitalocean/app_action). Unset secrets substitute to empty strings
+      # and the API degrades gracefully.
+      - key: ELEVENLABS_API_KEY
+        value: ${ELEVENLABS_API_KEY}
+        scope: RUN_TIME
+        type: SECRET
+      - key: DIGITALOCEAN_AGENT_ENDPOINT
+        value: ${DIGITALOCEAN_AGENT_ENDPOINT}
+        scope: RUN_TIME
+      - key: DIGITALOCEAN_AGENT_ENDPOINT_KEY
+        value: ${DIGITALOCEAN_AGENT_ENDPOINT_KEY}
+        scope: RUN_TIME
+        type: SECRET
       - key: NVIDIA_API_KEY
         value: ""
         scope: RUN_TIME
