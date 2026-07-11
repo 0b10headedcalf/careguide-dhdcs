@@ -1,4 +1,4 @@
-# CareBridge CA
+# CareGuide
 
 Multilingual coverage-to-care agent for uninsured or recently uninsured Californians.
 Built for the DigitalOcean + MLH AI for Social Good hackathon.
