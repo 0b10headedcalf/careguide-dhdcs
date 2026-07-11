@@ -1,8 +1,13 @@
-# DigitalOcean App Platform spec for CareGuide (Next.js, Dockerfile build).
-# Create the app:  doctl apps create --spec .do/app.yaml
-# Update it later:  doctl apps update <APP_ID> --spec .do/app.yaml
+# DigitalOcean App Platform spec — CareBridge CA full-stack deploy.
+# One app, two services, gateway path-based routing:
+#   /api/*  -> api service (FastAPI)
+#   /*      -> web service (Next.js)
+# Same origin means the frontend can call `/api/...` as a relative URL and
+# CORS never fires. `doctl apps update <APP_ID> --spec .do/app.yaml` after
+# any edit.
 name: careguide
 region: nyc
+
 services:
   - name: web
     dockerfile_path: apps/web/Dockerfile
@@ -16,15 +21,77 @@ services:
     instance_size_slug: basic-xxs
     health_check:
       http_path: /
+    routes:
+      - path: /
     envs:
       # NEXT_PUBLIC_* must exist at BUILD time to be inlined into the client
-      # bundle. RUN_AND_BUILD_TIME makes App Platform pass it as a docker
-      # --build-arg AND set it at runtime. The key is referrer-locked, so it
-      # is safe to ship in the bundle — but set the real value in the
-      # dashboard (Settings -> web -> Environment Variables) rather than here.
+      # bundle. Empty string here means the client makes same-origin relative
+      # fetches to /api/*, which DO's gateway routes to the api service below.
+      - key: NEXT_PUBLIC_API_BASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: ""
+      # Referrer-locked at the Google Cloud console, so shipping in the
+      # bundle is acceptable for this deploy.
       - key: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
         scope: RUN_AND_BUILD_TIME
         value: AIzaSyDL1YdpBJQWEOM0RfJbZWbFjVKl80DF4UM
-      - key: NEXT_PUBLIC_API_BASE_URL
-        scope: RUN_AND_BUILD_TIME
-        value: http://localhost:8000
+
+  - name: api
+    dockerfile_path: apps/api/Dockerfile
+    source_dir: /
+    github:
+      repo: 0b10headedcalf/team-dhdcs
+      branch: main
+      deploy_on_push: true
+    http_port: 8000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /api/health
+    routes:
+      - path: /api
+        preserve_path_prefix: true
+    envs:
+      - key: APP_ENV
+        value: production
+        scope: RUN_TIME
+      # DATABASE_URL uses ephemeral SQLite for the hackathon. Container
+      # restarts wipe the DB; the cache seeder can be re-run. For a real
+      # deployment attach managed Postgres via the DO dashboard and
+      # override this value.
+      - key: DATABASE_URL
+        value: sqlite:///./carebridge.db
+        scope: RUN_TIME
+      - key: DEBUG
+        value: "false"
+        scope: RUN_TIME
+      # Same-origin traffic never triggers CORS, so this list only needs
+      # to cover local development.
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000"
+        scope: RUN_TIME
+      - key: LOG_LEVEL
+        value: INFO
+        scope: RUN_TIME
+      - key: LOG_REDACTION_ENABLED
+        value: "true"
+        scope: RUN_TIME
+      - key: STORE_RAW_INTAKE_MESSAGES
+        value: "false"
+        scope: RUN_TIME
+      # Optional keys — leave empty unless the dashboard sets them. The API
+      # ships mock fallbacks / graceful empty responses when a key is
+      # missing, so an unfilled key here degrades gracefully rather than
+      # crashing.
+      - key: NVIDIA_API_KEY
+        value: ""
+        scope: RUN_TIME
+      - key: DIGITALOCEAN_API_TOKEN
+        value: ""
+        scope: RUN_TIME
+      - key: GOOGLE_MAPS_SERVER_API_KEY
+        value: ""
+        scope: RUN_TIME
+      - key: DATASF_APP_TOKEN
+        value: ""
+        scope: RUN_TIME
