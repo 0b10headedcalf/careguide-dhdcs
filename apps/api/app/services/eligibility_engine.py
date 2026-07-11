@@ -46,6 +46,7 @@ def evaluate_case_pathway(session: Session, case_id: str) -> dict:
         "human_review_required": result.human_review_required,
         "explanation_simple": result.explanation_simple,
         "missing_questions": outcome.get("missing_questions", []),
+        "verification_flags": outcome.get("verification_flags", []),
         "conflicting_information": [],
         "triggered_rule_ids": [selected_rule["id"]] if selected_rule else [],
         "next_best_action": outcome.get("next_best_action", "Continue intake."),

@@ -130,6 +130,20 @@ export function HeroSection() {
             options, prepare your forms, and connect you to local help.
           </p>
 
+          <p className="mt-4 max-w-[38.75rem] text-sm leading-6 text-slatecare/80">
+            Medi-Cal already covers more than one-third of Californians. The front door to
+            that coverage — forms, documents, language, local help — lives in disconnected
+            places. CareBridge CA turns that maze into a guided case file.{" "}
+            <a
+              href="https://www.dhcs.ca.gov/dataandstats/Pages/Medi-Cal-Eligibility-Statistics.aspx"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:no-underline"
+            >
+              Source: DHCS
+            </a>
+          </p>
+
           <VoiceInteractionPanel
             state={voiceState}
             transcript={transcript}
