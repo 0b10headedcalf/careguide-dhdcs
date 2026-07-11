@@ -1,4 +1,11 @@
 import type {
+  ApiEnvelope,
+  ApiErrorEnvelope,
+  CaseCreateRequest,
+  IntakeConfirmRequest,
+  IntakeMessageRequest
+} from "@carebridge/schemas";
+import type {
   CaseDraft,
   DocumentChecklistEntry,
   FormFieldValue,
@@ -7,6 +14,14 @@ import type {
 } from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+export type {
+  ApiEnvelope,
+  ApiErrorEnvelope,
+  CaseCreateRequest,
+  IntakeConfirmRequest,
+  IntakeMessageRequest
+};
 
 export type CareGuideApiClient = {
   createCase: () => Promise<{ caseId: string }>;

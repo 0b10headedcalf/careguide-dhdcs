@@ -17,3 +17,4 @@ carebridge.db
 private_uploads/
 .next/
 node_modules/
+*.tsbuildinfo

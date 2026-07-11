@@ -5,7 +5,7 @@ name: careguide
 region: nyc
 services:
   - name: web
-    dockerfile_path: Dockerfile
+    dockerfile_path: apps/web/Dockerfile
     source_dir: /
     github:
       repo: 0b10headedcalf/team-dhdcs

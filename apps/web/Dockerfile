@@ -1,16 +1,20 @@
 # syntax=docker/dockerfile:1
+# Build context: repo root (so packages/schemas is reachable from apps/web).
 
 # ---- deps: install node_modules from the lockfile ----
 FROM oven/bun:1 AS deps
-WORKDIR /app
-COPY package.json bun.lock ./
+WORKDIR /app/apps/web
+COPY apps/web/package.json apps/web/bun.lock ./
 RUN bun install --frozen-lockfile
 
 # ---- builder: compile the Next.js app ----
 FROM oven/bun:1 AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY apps/web ./apps/web
+COPY packages/schemas ./packages/schemas
+
+WORKDIR /app/apps/web
 
 # The Maps key is NEXT_PUBLIC_*, so it must be present at BUILD time to be
 # inlined into the client bundle. Passed via --build-arg (see deploy notes).
@@ -33,11 +37,13 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
-# standalone output bundles a minimal server + only the deps it needs
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Next standalone in a monorepo preserves the workspace layout:
+#   .next/standalone/apps/web/server.js
+#   .next/standalone/apps/web/node_modules/
+COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
 USER nextjs
 EXPOSE 8080
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]
