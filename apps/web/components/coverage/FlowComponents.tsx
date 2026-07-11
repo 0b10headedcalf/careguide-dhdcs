@@ -494,6 +494,82 @@ export function FormQuestion({
   );
 }
 
+export function SourceBadge({
+  isCached,
+  sourceId,
+  sourceUrl,
+  retrievedDate
+}: {
+  isCached?: boolean;
+  sourceId?: string;
+  sourceUrl?: string;
+  retrievedDate?: string;
+}) {
+  if (!sourceId && !sourceUrl) return null;
+  const label = sourceId ? sourceIdToLabel(sourceId) : "Official source";
+  const dateText = retrievedDate ? new Date(retrievedDate).toLocaleDateString() : null;
+
+  if (isCached) {
+    return (
+      <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-900">
+        <span aria-hidden>◆</span>
+        <span>
+          Cached from {label}
+          {dateText ? ` · ${dateText}` : ""}
+        </span>
+        {sourceUrl ? (
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:no-underline"
+          >
+            source
+          </a>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-900">
+      <span aria-hidden>●</span>
+      <span>
+        Live from {label}
+        {dateText ? ` · ${dateText}` : ""}
+      </span>
+      {sourceUrl ? (
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:no-underline"
+        >
+          source
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
+function sourceIdToLabel(sourceId: string): string {
+  switch (sourceId) {
+    case "hrsa_health_centers":
+      return "HRSA";
+    case "datasf_health_care_facilities":
+      return "DataSF";
+    case "google_maps":
+      return "Google Maps";
+    case "covered_ca_forms":
+    case "covered_ca_local_help":
+      return "Covered California";
+    case "carebridge_preview":
+      return "CareBridge worksheet";
+    default:
+      return sourceId;
+  }
+}
+
 export function ResourceCard({ resource }: { resource?: ResourceSearchResult }) {
   if (!resource) {
     return (
@@ -512,6 +588,29 @@ export function ResourceCard({ resource }: { resource?: ResourceSearchResult }) 
     <article className="rounded-[18px] border border-[rgba(16,32,79,0.10)] bg-white p-5">
       <h2 className="text-xl font-extrabold text-navy">{resource.name}</h2>
       <p className="mt-2 text-base text-slatecare">{resource.type}</p>
+      {resource.address ? (
+        <p className="mt-2 text-sm text-slatecare">{resource.address}</p>
+      ) : null}
+      {resource.phone ? (
+        <p className="mt-1 text-sm text-slatecare">{resource.phone}</p>
+      ) : null}
+      {resource.distance ? (
+        <p className="mt-1 text-sm text-slatecare">{resource.distance}</p>
+      ) : null}
+      <div className="mt-3">
+        <SourceBadge
+          isCached={resource.isCached}
+          sourceId={resource.sourceId}
+          sourceUrl={resource.sourceUrl ?? resource.officialSource}
+          retrievedDate={resource.retrievedDate}
+        />
+      </div>
+      {resource.isCached ? (
+        <p className="mt-2 text-xs text-slatecare">
+          Live source is temporarily unavailable. Showing the most recent cached snapshot from
+          the official source.
+        </p>
+      ) : null}
     </article>
   );
 }

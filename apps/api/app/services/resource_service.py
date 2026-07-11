@@ -1,9 +1,13 @@
-from sqlmodel import Session
+import json
+from pathlib import Path
+
+from sqlmodel import Session, col, select
 
 from app.adapters.datasf import DataSFAdapter
 from app.adapters.google_maps import GoogleMapsAdapter
 from app.adapters.hrsa import HRSAAdapter
 from app.models.resource import Resource
+from app.models.source import SourceSnapshot
 from app.utils.dates import parse_datetime
 from app.utils.distance import haversine_miles
 from app.utils.hashing import sha256_json
@@ -29,13 +33,29 @@ async def get_nearby_resources(
         return {"resources": []}
 
     records: list[dict] = []
+    live_source_ids: set[str] = set()
     for adapter, priority in [(HRSAAdapter(), 1), (DataSFAdapter(), 2), (GoogleMapsAdapter(), 4)]:
         try:
-            for record in await adapter.nearby(lat=lat, lng=lng, radius_miles=radius_miles):
+            fetched = await adapter.nearby(lat=lat, lng=lng, radius_miles=radius_miles)
+            if fetched:
+                live_source_ids.add(adapter.source_id)
+            for record in fetched:
                 record["source_priority"] = priority
+                record["is_cached"] = False
                 records.append(record)
         except Exception:
             continue
+
+    # Fallback: if a source was down or returned nothing, hydrate its most recent
+    # cached_official snapshot. Snapshots are labeled as cached in the response so
+    # the UI can badge them; never invent data.
+    for source_id, priority in [("hrsa_health_centers", 1), ("datasf_health_care_facilities", 2)]:
+        if source_id in live_source_ids:
+            continue
+        for record in _load_cached_snapshot(session, source_id):
+            record["source_priority"] = priority
+            record["is_cached"] = True
+            records.append(record)
 
     output = []
     for record in records:
@@ -82,9 +102,34 @@ async def get_nearby_resources(
                 "source_id": resource.source_id,
                 "source_url": resource.source_url,
                 "retrieved_at": str(resource.retrieved_at),
-                "is_cached": False,
+                "is_cached": bool(record.get("is_cached", False)),
                 "reason_recommended": "Nearby verified HRSA health center." if resource.source_id == "hrsa_health_centers" else "Nearby public-source healthcare resource.",
             }
         )
     output.sort(key=lambda item: (item["distance_miles"] is None, item["distance_miles"] or 9999))
     return {"resources": output}
+
+
+def _load_cached_snapshot(session: Session, source_id: str) -> list[dict]:
+    """Read the most recent SourceSnapshot for source_id and return its records.
+
+    Returns [] if no snapshot exists or the file is unreadable. Never invents
+    records; snapshots carry their own source_url + retrieved_at.
+    """
+    snapshot = session.exec(
+        select(SourceSnapshot)
+        .where(SourceSnapshot.source_id == source_id)
+        .order_by(col(SourceSnapshot.retrieved_at).desc())
+    ).first()
+    if not snapshot:
+        return []
+    path = Path(snapshot.response_path)
+    if not path.exists():
+        return []
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(payload, list):
+        return []
+    return payload

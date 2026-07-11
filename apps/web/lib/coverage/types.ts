@@ -52,5 +52,11 @@ export interface ResourceSearchResult {
   officialSource?: string;
   retrievedDate?: string;
   languageSupport?: string[];
+  /** true when the record comes from data/cached_official rather than a live API. */
+  isCached?: boolean;
+  /** URL of the official source the record originally came from. */
+  sourceUrl?: string;
+  /** Human-readable source label, e.g. "HRSA", "DataSF". */
+  sourceId?: string;
 }
 
