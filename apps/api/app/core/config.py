@@ -1,4 +1,5 @@
 from functools import lru_cache
+import json
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     )
 
     APP_ENV: str = "development"
-    APP_NAME: str = "CareBridge CA API"
+    APP_NAME: str = "CareGuide API"
     API_PREFIX: str = "/api"
     DEBUG: bool = True
     SECRET_KEY: str = "replace-with-a-long-random-secret"
@@ -54,14 +55,11 @@ class Settings(BaseSettings):
     GRADIENT_AGENT_ACCESS_KEY: str = ""
     ELEVENLABS_API_KEY: str = ""
     ELEVENLABS_STT_MODEL: str = "scribe_v2"
+    ELEVENLABS_STT_URL: str = "https://api.elevenlabs.io/v1/speech-to-text"
 
     NVIDIA_API_KEY: str = ""
     NVIDIA_BASE_URL: str = "https://integrate.api.nvidia.com/v1"
     NVIDIA_MODEL_ID: str = ""
-
-    ELEVENLABS_API_KEY: str = ""
-    ELEVENLABS_STT_MODEL_ID: str = "scribe_v1"
-    ELEVENLABS_STT_URL: str = "https://api.elevenlabs.io/v1/speech-to-text"
 
     VAPI_PUBLIC_KEY: str = ""
     VAPI_PRIVATE_KEY: str = ""
@@ -107,6 +105,14 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, value: Any) -> list[str]:
         if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("["):
+                try:
+                    parsed = json.loads(stripped)
+                except json.JSONDecodeError:
+                    parsed = None
+                if isinstance(parsed, list):
+                    return [str(origin).strip() for origin in parsed if str(origin).strip()]
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 

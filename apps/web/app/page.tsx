@@ -1,5 +1,6 @@
 import { ActionCard } from "@/components/ActionCard";
-import { VoiceMissionControl } from "@/components/VoiceMissionControl";
+import { Header } from "@/components/Header";
+import { HeroSection } from "@/components/HeroSection";
 import {
   ClipboardHeartIcon,
   DocumentUserIcon,
@@ -9,11 +10,13 @@ import {
 export default function Home() {
   return (
     <div className="min-h-screen overflow-hidden bg-cream">
-      <main>
-        <VoiceMissionControl />
+      <Header />
 
-        <section className="px-4 py-12 sm:px-8 sm:py-16 lg:px-10">
-          <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
+      <main>
+        <HeroSection />
+
+        <section className="px-5 pb-20 sm:px-10 sm:pb-24 lg:px-16 lg:pb-28">
+          <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             <ActionCard
               icon={<ClipboardHeartIcon className="h-8 w-8" aria-hidden />}
               title="Find Coverage"

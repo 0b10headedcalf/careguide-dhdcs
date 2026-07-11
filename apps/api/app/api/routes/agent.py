@@ -31,20 +31,3 @@ async def agent_message(
 ):
     return await _respond(payload, session, rid)
 
-
-@router.post("/forms/ask")
-async def ask_form(
-    payload: AgentMessageRequest,
-    session: Session = Depends(get_session),
-    rid: str = Depends(request_id),
-):
-    return await _respond(payload, session, rid)
-
-
-@router.post("/forms/next-question")
-async def next_form_question(
-    payload: AgentMessageRequest,
-    session: Session = Depends(get_session),
-    rid: str = Depends(request_id),
-):
-    return await _respond(payload, session, rid)

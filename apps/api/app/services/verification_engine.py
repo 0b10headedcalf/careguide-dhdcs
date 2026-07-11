@@ -22,9 +22,9 @@ def verify_packet(session: Session, case_id: str, form_id: str) -> dict:
         if not fact.source_ref:
             blocking_flags.append(f"{canonical_name} is missing provenance.")
     if "signature" in facts:
-        blocking_flags.append("CareBridge CA cannot create or apply a signature.")
+        blocking_flags.append("CareGuide cannot create or apply a signature.")
     if "authorized_representative.appointment" in facts:
-        blocking_flags.append("CareBridge CA cannot appoint itself as an authorized representative.")
+        blocking_flags.append("CareGuide cannot appoint itself as an authorized representative.")
     case.status = "verification_needed" if blocking_flags else "ready_for_human_review"
     session.add(case)
     session.commit()

@@ -23,7 +23,7 @@ async def transcribe_audio(
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
-                "https://api.elevenlabs.io/v1/speech-to-text",
+                getattr(settings, "ELEVENLABS_STT_URL", "https://api.elevenlabs.io/v1/speech-to-text"),
                 headers={"xi-api-key": settings.ELEVENLABS_API_KEY},
                 data=form,
                 files={"file": (filename, data, content_type)},
@@ -38,4 +38,5 @@ async def transcribe_audio(
         "language_probability": payload.get("language_probability"),
         "words": payload.get("words", []),
         "source": "elevenlabs",
+        "needs_user_confirmation": True,
     }

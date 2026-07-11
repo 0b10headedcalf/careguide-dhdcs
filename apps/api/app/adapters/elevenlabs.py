@@ -18,7 +18,7 @@ class ElevenLabsAdapter:
         settings = get_settings()
         if not settings.ELEVENLABS_API_KEY:
             return None
-        data = {"model_id": settings.ELEVENLABS_STT_MODEL_ID}
+        data = {"model_id": settings.ELEVENLABS_STT_MODEL}
         code = LANGUAGE_CODES.get(language)
         if code:
             data["language_code"] = code

@@ -122,13 +122,13 @@ def _safety_warnings(message: str) -> list[str]:
     text = message.lower()
     warnings = []
     if "definitely qualify" in text or "you are eligible" in text or "you qualify" in text:
-        warnings.append("CareBridge CA can provide a likely pathway only; official eligibility decisions are made by the state or county.")
+        warnings.append("CareGuide can provide a likely pathway only; official eligibility decisions are made by the state or county.")
     if "immigration category" in text:
-        warnings.append("CareBridge CA cannot interpret immigration law. A trained human reviewer should help.")
+        warnings.append("CareGuide cannot interpret immigration law. A trained human reviewer should help.")
     if "make up" in text and "clinic" in text:
-        warnings.append("CareBridge CA will not invent resources. It only returns verified source results.")
+        warnings.append("CareGuide will not invent resources. It only returns verified source results.")
     if "sign" in text:
-        warnings.append("CareBridge CA cannot create or apply a signature.")
+        warnings.append("CareGuide cannot create or apply a signature.")
     if "medical advice" in text:
-        warnings.append("CareBridge CA cannot provide diagnosis or treatment advice.")
+        warnings.append("CareGuide cannot provide diagnosis or treatment advice.")
     return warnings

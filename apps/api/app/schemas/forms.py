@@ -12,6 +12,30 @@ class FormMapRequest(BaseModel):
     form_id: str
 
 
+class FormNextQuestionRequest(BaseModel):
+    case_id: str
+    language: str = "en"
+    explanation_level: str = "simple"
+    form_id: str = "CCFRM604"
+
+
+class FormAnswerRequest(FormNextQuestionRequest):
+    answer: str = Field(min_length=1, max_length=4000)
+    field_name: str | None = None
+    input_mode: str = "text"
+
+
+class FormConfirmFieldRequest(FormNextQuestionRequest):
+    field_name: str
+    official_label: str | None = None
+    value: Any
+    source_type: str = "user_text"
+    confidence: float = 1.0
+    needs_review: bool = False
+    explanation: str = ""
+    confirmed: bool = True
+
+
 class TriggeredForm(BaseModel):
     form_id: str
     name: str
@@ -47,4 +71,3 @@ class VerifyData(BaseModel):
     blocking_flags: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     ready_for_handoff: bool
-

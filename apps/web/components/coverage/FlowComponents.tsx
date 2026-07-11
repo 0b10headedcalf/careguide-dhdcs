@@ -1,10 +1,11 @@
-"use client";
-
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import type { ReactNode } from "react";
-import { LanguageMenu } from "@/components/Header";
-import { ArrowRightIcon, HeartIcon, MicIcon } from "@/components/icons";
+import {
+  ArrowRightIcon,
+  ChevronDownIcon,
+  MicIcon
+} from "@/components/icons";
 import type {
   DocumentChecklistEntry,
   FormFieldValue,
@@ -38,43 +39,53 @@ export function getCurrentStep(pathname: string) {
 }
 
 export function AppHeader() {
-  const router = useRouter();
   return (
-    <header className="border-b border-[rgba(16,32,79,0.10)] bg-cream/95 px-4 py-4 sm:px-8 lg:px-10">
+    <header className="border-b border-warmBorder bg-cream/95 px-5 py-4 sm:px-10 lg:px-16">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <Link
           href="/"
-          className="inline-flex min-h-11 items-center gap-3 rounded-xl focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          className="inline-flex min-h-11 items-center gap-3 rounded-md focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
           aria-label="Go to CareGuide home"
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-white shadow-soft">
-            <HeartIcon className="h-6 w-6" aria-hidden />
-          </span>
+          <Image
+            src="/illustrations/logo.png"
+            alt="CareGuide heart and Golden Gate Bridge logo"
+            width={64}
+            height={64}
+            priority
+            className="h-[72px] w-[72px] shrink-0 object-contain sm:h-[84px] sm:w-[84px]"
+          />
           <span>
-            <span className="block text-xl font-extrabold leading-tight text-navy">
+            <span className="block text-xl font-bold leading-tight text-navy">
               CareGuide
             </span>
-            <span className="block text-sm font-semibold text-slatecare">
+            <span className="block text-sm font-medium text-slatecare">
               Healthcare benefits navigation
             </span>
           </span>
         </Link>
 
         <nav
-          className="flex flex-wrap items-center gap-2 text-sm font-bold text-navy"
+          className="flex flex-wrap items-center gap-2 text-sm font-semibold text-navy"
           aria-label="Coverage flow controls"
         >
-          <LanguageMenu align="right" />
           <button
             type="button"
-            onClick={() => router.push("/coverage/intake?mode=voice")}
-            className="inline-flex min-h-11 items-center rounded-xl px-3 transition hover:bg-white/70 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 transition hover:bg-skysoft hover:text-primaryDark focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            aria-label="Change language"
+          >
+            English
+            <ChevronDownIcon className="h-4 w-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center rounded-md px-3 transition hover:bg-skysoft hover:text-primaryDark focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
             Voice mode
           </button>
           <Link
             href="/dashboard"
-            className="inline-flex min-h-11 items-center rounded-xl border border-[rgba(16,32,79,0.12)] bg-white px-4 transition hover:border-primary hover:text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            className="inline-flex min-h-11 items-center rounded-md border border-[#D9E3F8] bg-skysoft px-4 text-primaryDark transition hover:border-primary hover:bg-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
             Save and exit
           </Link>
@@ -89,10 +100,10 @@ export function ProgressHeader({ pathname }: { pathname: string }) {
   const progressPercent = ((currentStep + 1) / workflowSteps.length) * 100;
 
   return (
-    <div className="border-b border-[rgba(16,32,79,0.08)] bg-cream px-4 py-4 sm:px-8 lg:px-10">
+    <div className="border-b border-warmBorder bg-cream px-5 py-4 sm:px-10 lg:px-16">
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between gap-4 md:hidden">
-          <p className="text-sm font-extrabold text-navy">
+          <p className="text-sm font-semibold text-navy">
             Step {currentStep + 1} of {workflowSteps.length}: {workflowSteps[currentStep].label}
           </p>
           <p className="text-sm font-semibold text-slatecare">
@@ -101,7 +112,7 @@ export function ProgressHeader({ pathname }: { pathname: string }) {
         </div>
         <div className="mt-3 h-2 rounded-full bg-white md:hidden">
           <div
-            className="h-full rounded-full bg-primary"
+            className="h-full rounded-full bg-primaryFill"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -116,21 +127,21 @@ export function ProgressHeader({ pathname }: { pathname: string }) {
                 <Link
                   href={step.href}
                   aria-current={state === "current" ? "step" : undefined}
-                  className={`flex min-h-12 items-center gap-2 rounded-xl px-3 text-sm font-bold transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary ${
+                  className={`flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary ${
                     state === "current"
-                      ? "bg-primary text-white"
+                      ? "bg-skysoft text-navy"
                       : state === "completed"
-                        ? "bg-[#EAF0FF] text-primaryDark hover:bg-[#DCE6FF]"
-                        : "bg-white/70 text-slatecare hover:bg-white"
+                        ? "text-primaryDark hover:bg-skysoft"
+                        : "text-slatecare hover:bg-white"
                   }`}
                 >
                   <span
                     className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
                       state === "current"
-                        ? "bg-white text-primary"
+                        ? "bg-primaryFill text-white"
                         : state === "completed"
-                          ? "bg-primary text-white"
-                          : "bg-[#E9E1D4] text-navy"
+                          ? "bg-skysoft text-primaryDark"
+                          : "bg-beige text-navy"
                     }`}
                     aria-hidden
                   >
@@ -161,7 +172,7 @@ export function PrimaryButton({
   type?: "button" | "submit";
 }) {
   const className =
-    "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primaryFill px-5 text-base font-extrabold text-white transition hover:bg-primaryDark active:bg-primaryActive disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary";
+    "inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-primaryFill px-6 text-base font-semibold text-white transition hover:bg-primaryDark active:bg-primaryActive disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary";
 
   if (href) {
     return (
@@ -182,17 +193,15 @@ export function SecondaryButton({
   children,
   href,
   onClick,
-  disabled,
   type = "button"
 }: {
   children: ReactNode;
   href?: string;
   onClick?: () => void;
-  disabled?: boolean;
   type?: "button" | "submit";
 }) {
   const className =
-    "inline-flex min-h-12 items-center justify-center rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-5 text-base font-extrabold text-navy transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary";
+    "inline-flex min-h-12 items-center justify-center rounded-md border border-[#D9E3F8] bg-skysoft px-6 text-base font-semibold text-primaryDark transition hover:border-primary hover:bg-white hover:text-primaryDark focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary";
 
   if (href) {
     return (
@@ -203,7 +212,7 @@ export function SecondaryButton({
   }
 
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={className}>
+    <button type={type} onClick={onClick} className={className}>
       {children}
     </button>
   );
@@ -220,12 +229,12 @@ export function VoiceOrb({ state = "idle" }: { state?: VoiceState }) {
 
   return (
     <div className="flex flex-col items-center gap-3 text-center">
-      <div className="careguide-voice-orb relative flex h-28 w-28 items-center justify-center rounded-full bg-[#EAF0FF] text-primary sm:h-32 sm:w-32" data-state={state}>
-        <span className="absolute inset-3 rounded-full bg-white/80" aria-hidden />
-        <span className="absolute inset-0 rounded-full border border-[#B9C9F8]" aria-hidden />
+      <div className="careguide-voice-orb relative flex h-28 w-28 items-center justify-center rounded-full bg-skysoft text-primaryDark sm:h-32 sm:w-32" data-state={state}>
+        <span className="absolute inset-3 rounded-full bg-white/78" aria-hidden />
+        <span className="absolute inset-0 rounded-full border border-[#D9E3F8]" aria-hidden />
         <MicIcon className="relative h-10 w-10" aria-hidden />
       </div>
-      <p aria-live="polite" className="text-sm font-extrabold text-navy">
+      <p aria-live="polite" className="text-sm font-semibold text-navy">
         {statusByState[state]}
       </p>
     </div>
@@ -242,8 +251,8 @@ export function VoiceTranscript({
   helper?: string;
 }) {
   return (
-    <div className="rounded-[18px] border border-[#B9C9F8] bg-[#EAF0FF] p-4">
-      <label htmlFor="voice-transcript" className="text-sm font-extrabold text-navy">
+    <div className="rounded-lg border border-[#D9E3F8] bg-skysoft p-4">
+      <label htmlFor="voice-transcript" className="text-sm font-semibold text-navy">
         Live transcript
       </label>
       <textarea
@@ -251,7 +260,7 @@ export function VoiceTranscript({
         value={transcript}
         onChange={(event) => onChange?.(event.target.value)}
         rows={3}
-        className="mt-2 w-full resize-none rounded-xl border border-[#B9C9F8] bg-white px-3 py-3 text-base leading-6 text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="mt-2 w-full resize-none rounded-md border border-[#D9E3F8] bg-white px-3 py-3 text-base leading-6 text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary"
         aria-describedby={helper ? "voice-transcript-helper" : undefined}
       />
       {helper ? (
@@ -273,13 +282,13 @@ export function QuestionCard({
   disclosure?: string;
 }) {
   return (
-    <section className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card sm:p-7">
-      <h1 className="font-editorial text-[2rem] font-semibold leading-tight text-navy sm:text-[2.7rem]">
+    <section className="careguide-soft-card p-6 sm:p-9">
+      <h1 className="font-editorial text-[2rem] font-medium leading-tight text-navy sm:text-[2.55rem]">
         {title}
       </h1>
       {disclosure ? (
-        <details className="mt-4 rounded-xl bg-[#F4EEE5] p-4 text-sm leading-6 text-[#24182A]">
-          <summary className="cursor-pointer font-extrabold text-navy">
+        <details className="mt-5 rounded-md bg-bgsoft p-4 text-sm leading-6 text-slatecare">
+          <summary className="cursor-pointer font-semibold text-navy">
             Why are we asking this?
           </summary>
           <p className="mt-2">{disclosure}</p>
@@ -304,10 +313,10 @@ export function OptionChip({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`min-h-12 rounded-xl border px-4 text-left text-base font-bold transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary ${
+      className={`min-h-12 rounded-md border px-4 text-left text-base font-semibold transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary ${
         selected
-          ? "border-primary bg-[#EAF0FF] text-navy"
-          : "border-[rgba(16,32,79,0.14)] bg-white text-slatecare hover:border-primary hover:text-navy"
+          ? "border-primary bg-skysoft text-navy"
+          : "border-[rgba(24,36,71,0.14)] bg-white text-slatecare hover:border-primary hover:text-navy"
       }`}
     >
       {children}
@@ -317,8 +326,8 @@ export function OptionChip({
 
 export function SourceDisclosure({ children }: { children: ReactNode }) {
   return (
-    <aside className="rounded-[16px] border border-[rgba(16,32,79,0.10)] bg-[#F4EEE5] p-4 text-sm leading-6 text-[#24182A]">
-      <p className="font-extrabold text-navy">Source and decision note</p>
+    <aside className="rounded-md bg-bgsoft p-4 text-sm leading-6 text-slatecare">
+      <p className="font-semibold text-navy">Source and decision note</p>
       <div className="mt-1">{children}</div>
     </aside>
   );
@@ -326,7 +335,7 @@ export function SourceDisclosure({ children }: { children: ReactNode }) {
 
 export function ReviewFlag({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex min-h-9 items-center rounded-full border border-[#B9C9F8] bg-[#EAF0FF] px-3 text-sm font-extrabold text-navy">
+    <span className="inline-flex min-h-9 items-center rounded-md border border-[#D9E3F8] bg-skysoft px-3 text-sm font-semibold text-navy">
       Needs review: {children}
     </span>
   );
@@ -342,24 +351,24 @@ export function SidebarProgress({
   completedCount: number;
 }) {
   return (
-    <aside className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card lg:sticky lg:top-6">
-      <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-primaryDark">
+    <aside className="rounded-lg bg-bgsoft p-5 lg:sticky lg:top-6">
+      <p className="text-sm font-semibold text-primaryDark">
         Application progress
       </p>
-      <h2 className="mt-2 text-2xl font-extrabold text-navy">{currentSection}</h2>
+      <h2 className="mt-2 text-2xl font-semibold text-navy">{currentSection}</h2>
       <ol className="mt-5 space-y-3">
         {sections.map((section, index) => {
           const completed = index < completedCount;
           const current = section === currentSection;
           return (
-            <li key={section} className="flex items-center gap-3 text-sm font-bold">
+            <li key={section} className="flex items-center gap-3 text-sm font-medium">
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${
                   current
-                    ? "bg-primary text-white"
+                    ? "bg-primaryFill text-white"
                     : completed
-                      ? "bg-[#EAF0FF] text-primaryDark"
-                      : "bg-[#E9E1D4] text-navy"
+                      ? "bg-skysoft text-primaryDark"
+                      : "bg-beige text-navy"
                 }`}
                 aria-hidden
               >
@@ -379,11 +388,11 @@ export function SidebarProgress({
 
 export function PathwayCard({ preview }: { preview: PathwayPreview }) {
   return (
-    <section className="rounded-[22px] border border-[#B9C9F8] bg-[#EAF0FF] p-6 shadow-card sm:p-8">
-      <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-primaryDark">
-        Likely pathway preview
+    <section className="rounded-lg border border-[#D9E3F8] bg-skysoft p-6 shadow-soft sm:p-8">
+      <p className="text-sm font-semibold text-primaryDark">
+        Likely pathway
       </p>
-      <h1 className="mt-3 font-editorial text-[2.2rem] font-semibold leading-tight text-navy sm:text-[3rem]">
+      <h1 className="mt-3 font-editorial text-[2.2rem] font-medium leading-tight text-navy sm:text-[3rem]">
         {preview.label}
       </h1>
       <p className="mt-4 max-w-2xl text-lg leading-8 text-slatecare">
@@ -405,26 +414,24 @@ export function DocumentChecklistItem({
   onNeedHelp: () => void;
 }) {
   return (
-    <article className="rounded-[18px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-[0_10px_28px_rgba(16,32,79,0.06)]">
+    <article className="border-b border-[rgba(24,36,71,0.08)] bg-white px-1 py-5 last:border-b-0">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-navy">{item.title}</h2>
+          <h2 className="text-xl font-semibold text-navy">{item.title}</h2>
           <p className="mt-2 max-w-2xl text-base leading-7 text-slatecare">
             {item.explanation}
           </p>
         </div>
-        <span className="inline-flex min-h-9 items-center self-start rounded-full bg-[#EAF0FF] px-3 text-sm font-extrabold text-primaryDark">
-          {added ? "Ready" : item.status}
+        <span className="inline-flex min-h-9 items-center self-start rounded-md bg-skysoft px-3 text-sm font-semibold text-primaryDark">
+          {added ? "Added" : item.status}
         </span>
       </div>
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-        <SecondaryButton onClick={onAdd}>
-          {added ? "Marked as ready" : "I have this ready"}
-        </SecondaryButton>
+        <SecondaryButton onClick={onAdd}>{added ? "Replace file" : "Upload file"}</SecondaryButton>
         <button
           type="button"
           onClick={onNeedHelp}
-          className="inline-flex min-h-12 items-center justify-center rounded-xl px-4 text-base font-extrabold text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          className="inline-flex min-h-12 items-center justify-center rounded-md px-4 text-base font-semibold text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
         >
           I don’t have this
         </button>
@@ -441,14 +448,14 @@ export function OfficialQuestionDisclosure({
   sourceHref: string;
 }) {
   return (
-    <details className="mt-5 rounded-[16px] border border-[rgba(16,32,79,0.10)] bg-[#F4EEE5] p-4">
-      <summary className="cursor-pointer text-sm font-extrabold text-navy">
+    <details className="mt-5 rounded-md bg-bgsoft p-4">
+      <summary className="cursor-pointer text-sm font-semibold text-navy">
         Official form wording
       </summary>
-      <p className="mt-3 text-base leading-7 text-[#24182A]">{officialLabel}</p>
+      <p className="mt-3 text-base leading-7 text-slatecare">{officialLabel}</p>
       <a
         href={sourceHref}
-        className="mt-3 inline-flex min-h-11 items-center text-sm font-extrabold text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+        className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
       >
         View original government form
       </a>
@@ -464,13 +471,13 @@ export function FormQuestion({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[22px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card sm:p-8">
+    <section className="careguide-soft-card p-6 sm:p-9">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-primaryDark">
+          <p className="text-sm font-semibold text-primaryDark">
             Form question
           </p>
-          <h1 className="mt-3 text-2xl font-extrabold leading-tight text-navy sm:text-3xl">
+          <h1 className="mt-3 text-2xl font-semibold leading-tight text-navy sm:text-3xl">
             {field.plainLanguageLabel}
           </h1>
         </div>
@@ -492,87 +499,11 @@ export function FormQuestion({
   );
 }
 
-export function SourceBadge({
-  isCached,
-  sourceId,
-  sourceUrl,
-  retrievedDate
-}: {
-  isCached?: boolean;
-  sourceId?: string;
-  sourceUrl?: string;
-  retrievedDate?: string;
-}) {
-  if (!sourceId && !sourceUrl) return null;
-  const label = sourceId ? sourceIdToLabel(sourceId) : "Official source";
-  const dateText = retrievedDate ? retrievedDate.split("T")[0] : null;
-
-  if (isCached) {
-    return (
-      <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-900">
-        <span aria-hidden>◆</span>
-        <span>
-          Cached from {label}
-          {dateText ? ` · ${dateText}` : ""}
-        </span>
-        {sourceUrl ? (
-          <a
-            href={sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:no-underline"
-          >
-            source
-          </a>
-        ) : null}
-      </div>
-    );
-  }
-
-  return (
-    <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-900">
-      <span aria-hidden>●</span>
-      <span>
-        Live from {label}
-        {dateText ? ` · ${dateText}` : ""}
-      </span>
-      {sourceUrl ? (
-        <a
-          href={sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline underline-offset-2 hover:no-underline"
-        >
-          source
-        </a>
-      ) : null}
-    </div>
-  );
-}
-
-function sourceIdToLabel(sourceId: string): string {
-  switch (sourceId) {
-    case "hrsa_health_centers":
-      return "HRSA";
-    case "datasf_health_care_facilities":
-      return "DataSF";
-    case "google_maps":
-      return "Google Maps";
-    case "covered_ca_forms":
-    case "covered_ca_local_help":
-      return "Covered California";
-    case "carebridge_preview":
-      return "CareBridge worksheet";
-    default:
-      return sourceId;
-  }
-}
-
 export function ResourceCard({ resource }: { resource?: ResourceSearchResult }) {
   if (!resource) {
     return (
-      <article className="rounded-[18px] border border-dashed border-[#B9C9F8] bg-white p-6 text-center">
-        <h2 className="text-xl font-extrabold text-navy">
+      <article className="rounded-lg border border-dashed border-[#D9E3F8] bg-white p-6 text-center">
+        <h2 className="text-xl font-semibold text-navy">
           Enter your ZIP code to search verified resources.
         </h2>
         <p className="mt-2 text-base leading-7 text-slatecare">
@@ -583,40 +514,9 @@ export function ResourceCard({ resource }: { resource?: ResourceSearchResult }) 
   }
 
   return (
-    <article className="rounded-[18px] border border-[rgba(16,32,79,0.10)] bg-white p-5">
-      <h2 className="text-xl font-extrabold text-navy">{resource.name}</h2>
+    <article className="rounded-lg border border-[rgba(24,36,71,0.08)] bg-white p-5">
+      <h2 className="text-xl font-semibold text-navy">{resource.name}</h2>
       <p className="mt-2 text-base text-slatecare">{resource.type}</p>
-      {resource.address ? (
-        <p className="mt-2 text-sm text-slatecare">{resource.address}</p>
-      ) : null}
-      {resource.phone ? (
-        <p className="mt-1 text-sm text-slatecare">{resource.phone}</p>
-      ) : null}
-      {resource.distance ? (
-        <p className="mt-1 text-sm text-slatecare">{resource.distance}</p>
-      ) : null}
-      {resource.reasonRecommended ? (
-        <p className="mt-2 text-sm leading-6 text-slatecare">{resource.reasonRecommended}</p>
-      ) : null}
-      {resource.languageSupport?.length ? (
-        <p className="mt-1 text-sm text-slatecare">
-          Verified language support: {resource.languageSupport.join(", ")}
-        </p>
-      ) : null}
-      <div className="mt-3">
-        <SourceBadge
-          isCached={resource.isCached}
-          sourceId={resource.sourceId}
-          sourceUrl={resource.sourceUrl ?? resource.officialSource}
-          retrievedDate={resource.retrievedDate}
-        />
-      </div>
-      {resource.isCached ? (
-        <p className="mt-2 text-xs text-slatecare">
-          Live source is temporarily unavailable. Showing the most recent cached snapshot from
-          the official source.
-        </p>
-      ) : null}
     </article>
   );
 }
@@ -633,13 +533,13 @@ export function PageIntro({
   children?: ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-8 sm:pt-12 lg:px-10">
+    <section className="mx-auto max-w-7xl px-5 pt-10 sm:px-10 sm:pt-14 lg:px-16">
       {eyebrow ? (
-        <p className="text-sm font-extrabold uppercase tracking-[0.14em] text-primaryDark">
+        <p className="text-sm font-semibold text-primaryDark">
           {eyebrow}
         </p>
       ) : null}
-      <h1 className="font-editorial mt-3 max-w-4xl text-[2.25rem] font-semibold leading-tight text-navy sm:text-[3rem]">
+      <h1 className="font-editorial mt-3 max-w-4xl text-[2.2rem] font-medium leading-tight text-navy sm:text-[2.85rem]">
         {title}
       </h1>
       {text ? (
@@ -654,7 +554,7 @@ export function InlineArrowLink({ href, children }: { href: string; children: Re
   return (
     <Link
       href={href}
-      className="inline-flex min-h-11 items-center gap-2 text-base font-extrabold text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+      className="inline-flex min-h-11 items-center gap-2 text-base font-semibold text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
     >
       {children}
       <ArrowRightIcon className="h-5 w-5" aria-hidden />

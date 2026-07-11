@@ -22,6 +22,7 @@ async def document_upload(
 
 
 @router.get("/cases/{case_id}/documents")
+@router.get("/documents/{case_id}")
 def case_documents(case_id: str, session: Session = Depends(get_session), rid: str = Depends(request_id)):
     return success({"documents": list_documents(session, case_id)}, rid)
 

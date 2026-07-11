@@ -75,14 +75,14 @@ def _render_packet(detail: dict) -> str:
 <main class="page">
   <header class="header">
     <div>
-      <p class="eyebrow">CareBridge CA — Handoff Passport</p>
+      <p class="eyebrow">CareGuide - Handoff Passport</p>
       <h1>{escape(OFFICIAL_PACKET_TITLE)}</h1>
     </div>
     <button type="button" class="print-btn no-print" onclick="window.print()">Print / Save as PDF</button>
   </header>
 
   <p class="disclaimer">
-    <strong>Not an official submission.</strong> This is a CareBridge-generated
+    <strong>Not an official submission.</strong> This is a CareGuide-generated
     review packet the user prepared before speaking with a certified counselor.
     The state or county makes the final coverage decision.
   </p>

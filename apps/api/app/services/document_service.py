@@ -4,7 +4,6 @@ from io import BytesIO
 from pathlib import Path
 
 from fastapi import UploadFile
-from pypdf import PdfReader
 from sqlmodel import Session, select
 
 from app.core.config import get_settings
@@ -27,6 +26,8 @@ def _extract_text(data: bytes, extension: str) -> tuple[str, str | None]:
         return "complete", data.decode("utf-8", errors="replace").strip()
     if extension == ".pdf":
         try:
+            from pypdf import PdfReader
+
             text = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(data)).pages).strip()
             return ("complete", text) if text else ("failed", None)
         except Exception:

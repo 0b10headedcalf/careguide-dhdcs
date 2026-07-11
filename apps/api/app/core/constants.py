@@ -13,10 +13,9 @@ HIGH_RISK_FACTS = {
     "identity.document",
     "immigration.document",
 }
-OFFICIAL_PACKET_TITLE = "CareBridge CA review packet — not an official submission"
+OFFICIAL_PACKET_TITLE = "CareGuide review packet - not an official submission"
 FORBIDDEN_PHRASES = [
     "you are eligible",
     "you qualify",
     "your application was submitted",
 ]
-

@@ -80,7 +80,7 @@ export function VoiceTransitionWave({ state }: { state: VoiceState }) {
 
   return (
     <div
-      className="hero-transition-wave mx-auto mt-8 h-[76px] w-full max-w-7xl sm:mt-10 sm:h-[112px] lg:mt-8 lg:h-[140px]"
+      className="hero-transition-wave mx-auto mt-10 h-[72px] w-full max-w-7xl sm:mt-12 sm:h-[104px] lg:mt-10 lg:h-[128px]"
       data-state={state}
       aria-hidden="true"
     >
@@ -100,12 +100,12 @@ export function VoiceTransitionWave({ state }: { state: VoiceState }) {
             x2="1360"
             y2="0"
           >
-            <stop offset="0%" stopColor="#F4EFE6" />
-            <stop offset="23%" stopColor="#A8B9FA" />
-            <stop offset="46%" stopColor="#6F8DF7" />
-            <stop offset="58%" stopColor="#3F6FF2" />
-            <stop offset="78%" stopColor="#A8B9FA" />
-            <stop offset="100%" stopColor="#F4EFE6" />
+            <stop offset="0%" stopColor="#FAF8F4" />
+            <stop offset="24%" stopColor="#D9E3F8" />
+            <stop offset="46%" stopColor="#AFC5F4" />
+            <stop offset="60%" stopColor="#7EA2ED" />
+            <stop offset="78%" stopColor="#D9E3F8" />
+            <stop offset="100%" stopColor="#FAF8F4" />
             {!reducedMotion && (
               <animateTransform
                 attributeName="gradientTransform"
@@ -137,7 +137,7 @@ export function VoiceTransitionWave({ state }: { state: VoiceState }) {
             fill="none"
             stroke="url(#careguide-wave-gradient)"
             strokeLinecap="round"
-            strokeWidth="2.5"
+            strokeWidth="2.25"
           >
             {!reducedMotion && (
               <animate
@@ -158,7 +158,7 @@ export function VoiceTransitionWave({ state }: { state: VoiceState }) {
               fill="none"
               stroke="url(#careguide-wave-gradient)"
               strokeLinecap="round"
-              strokeOpacity="0.2"
+              strokeOpacity="0.18"
               strokeWidth="2"
               transform="translate(0 12)"
             >

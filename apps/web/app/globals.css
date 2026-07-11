@@ -3,8 +3,25 @@
 @tailwind utilities;
 
 :root {
-  color: #10204f;
-  background: #f4efe6;
+  --color-bg: #faf8f4;
+  --color-bg-soft: #f4f1ec;
+  --color-surface: #ffffff;
+  --color-periwinkle: #7ea2ed;
+  --color-periwinkle-strong: #6288e6;
+  --color-periwinkle-soft: #eef3fe;
+  --color-border: #d9e3f8;
+  --color-text: #182447;
+  --color-text-muted: #59627a;
+  --color-muted-warm: #8b857c;
+  --color-beige: #eee6d8;
+  --color-success: #66c7a5;
+  --color-error: #e98478;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 8px 24px rgba(24, 36, 71, 0.05);
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 * {
@@ -19,8 +36,10 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: #f4efe6;
-  color: #10204f;
+  background:
+    radial-gradient(circle at 18% 4%, rgba(175, 197, 244, 0.18), transparent 28rem),
+    var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -32,8 +51,41 @@ button {
 
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid #3f6ff2;
+  outline: 3px solid var(--color-periwinkle-strong);
   outline-offset: 4px;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(126, 162, 237, 0.28);
+}
+
+.careguide-soft-card {
+  border: 1px solid rgba(24, 36, 71, 0.08);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.careguide-field {
+  min-height: 50px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(24, 36, 71, 0.14);
+  background: var(--color-surface);
+  padding: 0 1rem;
+  color: var(--color-text);
+}
+
+.careguide-field:focus-visible {
+  outline: 3px solid var(--color-periwinkle-strong);
+  outline-offset: 3px;
+  border-color: var(--color-periwinkle);
 }
 
 .font-editorial {
@@ -72,8 +124,8 @@ a:focus-visible {
 }
 
 .careguide-voice-orb {
-  animation: voice-orb-idle 4.8s ease-in-out infinite;
-  box-shadow: 0 12px 32px rgba(63, 111, 242, 0.12);
+  animation: voice-orb-idle 5.8s ease-in-out infinite;
+  box-shadow: 0 12px 32px rgba(126, 162, 237, 0.14);
 }
 
 .careguide-voice-orb::before,
@@ -82,16 +134,16 @@ a:focus-visible {
   position: absolute;
   border-radius: 9999px;
   inset: 10px;
-  border: 1px solid rgba(63, 111, 242, 0.24);
+  border: 1px solid rgba(126, 162, 237, 0.26);
 }
 
 .careguide-voice-orb::after {
   inset: 24px;
-  border-color: rgba(111, 141, 247, 0.32);
+  border-color: rgba(98, 136, 230, 0.28);
 }
 
 .careguide-voice-orb[data-state="listening"] {
-  animation: voice-orb-listening 2.6s ease-in-out infinite;
+  animation: voice-orb-listening 3.2s ease-in-out infinite;
 }
 
 .careguide-voice-orb[data-state="processing"] {
@@ -99,7 +151,7 @@ a:focus-visible {
 }
 
 .careguide-voice-orb[data-state="speaking"] {
-  animation: voice-orb-speaking 2.2s ease-in-out infinite;
+  animation: voice-orb-speaking 2.8s ease-in-out infinite;
 }
 
 .careguide-voice-orb[data-state="error"] {
@@ -166,10 +218,10 @@ a:focus-visible {
     transform: scale(1);
   }
   35% {
-    transform: scale(1.06);
+    transform: scale(1.04);
   }
   68% {
-    transform: scale(1.02);
+    transform: scale(1.015);
   }
 }
 
@@ -188,7 +240,7 @@ a:focus-visible {
     transform: scale(1.01);
   }
   45% {
-    transform: scale(1.075);
+    transform: scale(1.045);
   }
 }
 
