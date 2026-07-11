@@ -25,6 +25,8 @@ const SEARCH_RADIUS_METERS = 8000;
 
 const DEFAULT_CENTER = { lat: 37.8044, lng: -122.2712 }; // Oakland, CA fallback
 
+const MAPS_ENABLED = Boolean(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY);
+
 export function NearbyResourcesMap({ zip }: { zip: string }) {
   const geocode = useGeocoder();
   const placesLib = useMapsLibrary("places");
@@ -33,6 +35,10 @@ export function NearbyResourcesMap({ zip }: { zip: string }) {
   const [resources, setResources] = useState<NearbyResource[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "empty" | "error">("idle");
+  // Only render the live map after mount on the client — never during
+  // server prerender, where there is no ApiProvider / browser.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const search = useCallback(async () => {
     if (!geocode || !placesLib || !zip.trim()) return;
@@ -86,6 +92,19 @@ export function NearbyResourcesMap({ zip }: { zip: string }) {
   }, [geocode, placesLib]);
 
   const ready = Boolean(geocode && placesLib);
+
+  if (!MAPS_ENABLED) {
+    return (
+      <p className="rounded-xl border border-[rgba(16,32,79,0.10)] bg-white p-4 text-sm font-semibold text-navy">
+        Map search is unavailable — the maps API key is not configured for this deployment.
+      </p>
+    );
+  }
+
+  // Skeleton during prerender / first paint so <Map> only mounts client-side.
+  if (!mounted) {
+    return <div className="h-80 w-full animate-pulse rounded-[20px] bg-[rgba(16,32,79,0.06)]" />;
+  }
 
   return (
     <div className="space-y-4">
