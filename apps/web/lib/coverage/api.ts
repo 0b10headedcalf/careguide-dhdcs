@@ -24,6 +24,62 @@ export type {
   IntakeMessageRequest
 };
 
+/** Raw shape of a resource returned by GET /api/resources/nearby. */
+type BackendResource = {
+  resource_id?: string;
+  name: string;
+  type: string;
+  address?: string | null;
+  phone?: string | null;
+  url?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  distance_miles?: number | null;
+  verified_language_support?: string[];
+  source_id: string;
+  source_url: string;
+  retrieved_at: string;
+  is_cached: boolean;
+  reason_recommended?: string;
+};
+
+/**
+ * Fetch ranked verified resources for a ZIP directly from the backend.
+ * Returns [] on any failure so the caller can render an honest empty state
+ * rather than a crash.
+ */
+export async function fetchNearbyResources(zip: string): Promise<ResourceSearchResult[]> {
+  if (!zip.trim()) return [];
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/resources/nearby?zip=${encodeURIComponent(zip.trim())}`,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    const body = (await response.json()) as
+      | { data: { resources: BackendResource[] } }
+      | { error: { message: string } };
+    if (!response.ok || "error" in body) return [];
+    return body.data.resources.map((record) => ({
+      name: record.name,
+      type: record.type,
+      address: record.address ?? undefined,
+      phone: record.phone ?? undefined,
+      distance:
+        record.distance_miles !== null && record.distance_miles !== undefined
+          ? `${record.distance_miles.toFixed(1)} mi`
+          : undefined,
+      officialSource: record.url ?? record.source_url,
+      retrievedDate: record.retrieved_at,
+      languageSupport: record.verified_language_support,
+      isCached: record.is_cached,
+      sourceId: record.source_id,
+      sourceUrl: record.source_url
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export type CareGuideApiClient = {
   createCase: () => Promise<{ caseId: string }>;
   submitIntakeMessage: (message: string, draft: CaseDraft) => Promise<CaseDraft>;
