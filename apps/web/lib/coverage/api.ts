@@ -50,10 +50,12 @@ type BackendResource = {
  */
 export async function fetchNearbyResources(zip: string): Promise<ResourceSearchResult[]> {
   if (!zip.trim()) return [];
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
     const response = await fetch(
       `${API_BASE_URL}/api/resources/nearby?zip=${encodeURIComponent(zip.trim())}`,
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { "Content-Type": "application/json" }, signal: controller.signal }
     );
     const body = (await response.json()) as
       | { data: { resources: BackendResource[] } }
@@ -77,6 +79,8 @@ export async function fetchNearbyResources(zip: string): Promise<ResourceSearchR
     }));
   } catch {
     return [];
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -99,17 +103,30 @@ function hasEnoughForMediCalPreview(draft: CaseDraft) {
 
 type EnvelopeOr<T> = ApiEnvelope<T> | ApiErrorEnvelope;
 
+// 5s per call is generous — the backend is deterministic and shouldn't hang.
+// A hard cap here prevents Mission Control from spinning forever when the
+// API is degraded; withMockFallback catches the resulting AbortError and
+// substitutes the mock, so the UI stays usable during a demo hiccup.
+const API_TIMEOUT_MS = 5000;
+
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init.headers ?? {}) }
-  });
-  const body = (await response.json()) as EnvelopeOr<T>;
-  if (!response.ok || "error" in body) {
-    const message = "error" in body ? body.error.message : `HTTP ${response.status}`;
-    throw new Error(message);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
+      signal: controller.signal
+    });
+    const body = (await response.json()) as EnvelopeOr<T>;
+    if (!response.ok || "error" in body) {
+      const message = "error" in body ? body.error.message : `HTTP ${response.status}`;
+      throw new Error(message);
+    }
+    return body.data;
+  } finally {
+    clearTimeout(timer);
   }
-  return body.data;
 }
 
 function readCachedCaseId(): string | null {
