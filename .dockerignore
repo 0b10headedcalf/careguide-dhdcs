@@ -14,9 +14,7 @@ __pycache__
 **/.env*.local
 npm-debug.log*
 .DS_Store
-README.md
-# monorepo: exclude backend and non-frontend paths from the web image build
-apps/api
-data
-rules
-docs
+carebridge.db
+*.sqlite
+*.sqlite3
+private_uploads/
