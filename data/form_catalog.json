@@ -1,0 +1,65 @@
+[
+  {
+    "form_id": "CCFRM604",
+    "name": "Application for Health Insurance",
+    "description": "Main application for California health coverage.",
+    "official_url": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf",
+    "source_id": "covered_ca_forms",
+    "source_type": "official_website",
+    "supported_languages": ["en"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf"
+    },
+    "last_verified_at": "2026-07-11T00:00:00Z",
+    "active": true
+  },
+  {
+    "form_id": "EMPLOYER_COVERAGE_PREVIEW",
+    "name": "Employer Coverage Preview Worksheet (CareBridge)",
+    "description": "CareBridge-generated worksheet to help you gather the employer coverage information the official CCFRM604 application will ask for. This is NOT an official Covered California form.",
+    "official_url": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf",
+    "source_id": "carebridge_preview",
+    "source_type": "carebridge_generated",
+    "supported_languages": ["en", "es"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf",
+      "es": "https://www.coveredca.com/pdfs/paper-application/CASSA-2020-Application-v61bc-WEB_110325%20ENG-ADA.pdf"
+    },
+    "is_preview": true,
+    "preview_disclaimer": "CareBridge-generated worksheet. Not an official Covered California form. The answers you gather here feed into the employer coverage section of the official CCFRM604 application.",
+    "maps_to_form_id": "CCFRM604",
+    "maps_to_section": "Employer-Sponsored Coverage",
+    "last_verified_at": "2026-07-11T00:00:00Z",
+    "active": true
+  },
+  {
+    "form_id": "INCOME_ATTESTATION",
+    "name": "Attestation of Income, No Documentation Available",
+    "description": "Official income attestation form for cases where documentation may not be available.",
+    "official_url": "https://www.coveredca.com/pdfs/Attestation-Form-Income-No-Documentation-Available-English.pdf",
+    "source_id": "covered_ca_forms",
+    "source_type": "official_website",
+    "supported_languages": ["en"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/pdfs/Attestation-Form-Income-No-Documentation-Available-English.pdf"
+    },
+    "last_verified_at": "2026-07-11T00:00:00Z",
+    "notes": "No public Spanish PDF is listed on coveredca.com/espanol/support/forms/ as of last verification. UI must fall back to English or route to a bilingual counselor for Spanish speakers.",
+    "active": true
+  },
+  {
+    "form_id": "DOCUMENT_COVER_PAGE",
+    "name": "Covered California Document Cover Page",
+    "description": "Official cover page for mailing, faxing, or separately sending documents.",
+    "official_url": "https://www.coveredca.com/pdfs/DocumentCoverPage.pdf",
+    "source_id": "covered_ca_forms",
+    "source_type": "official_website",
+    "supported_languages": ["en", "es"],
+    "official_urls_by_language": {
+      "en": "https://www.coveredca.com/pdfs/DocumentCoverPage.pdf",
+      "es": "https://www.coveredca.com/pdfs/DocumentCoverPageSpanish.pdf"
+    },
+    "last_verified_at": "2026-07-11T00:00:00Z",
+    "active": true
+  }
+]

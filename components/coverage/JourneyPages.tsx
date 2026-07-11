@@ -308,8 +308,8 @@ export function IntakeFlowPage() {
   };
 
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_21rem] lg:px-10">
-      <div className="space-y-6">
+    <section className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-16">
+      <div className="space-y-8">
         <QuestionCard title={question.title} disclosure={question.disclosure}>
           {question.kind === "options" ? (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -325,19 +325,19 @@ export function IntakeFlowPage() {
             </div>
           ) : (
             <label className="block">
-              <span className="text-sm font-extrabold text-navy">Your answer</span>
+              <span className="text-sm font-semibold text-navy">Your answer</span>
               <input
                 value={answer}
                 inputMode={question.kind === "number" ? "numeric" : "text"}
                 onChange={(event) => setAnswer(event.target.value)}
-                className="mt-2 min-h-12 w-full rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-4 text-base text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                className="careguide-field mt-2"
               />
             </label>
           )}
 
           {confirming ? (
-            <div className="mt-6 rounded-[18px] border border-[#B9C9F8] bg-[#EAF0FF] p-4">
-              <p className="text-base font-extrabold text-navy">
+            <div className="mt-6 rounded-lg border border-[#D9E3F8] bg-skysoft p-4">
+              <p className="text-base font-semibold text-navy">
                 You said: {answer}. Is that correct?
               </p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -373,12 +373,12 @@ export function IntakeFlowPage() {
       </div>
 
       <aside className="space-y-4">
-        <div className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card">
+        <div className="rounded-lg bg-bgsoft p-5">
           <VoiceOrb state={voiceState} />
           <button
             type="button"
             onClick={startVoice}
-            className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-primaryFill px-4 text-base font-extrabold text-white transition hover:bg-primaryDark focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+            className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primaryFill px-4 text-base font-semibold text-white transition hover:bg-primaryDark focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
             Answer with voice
           </button>
@@ -428,10 +428,10 @@ export function ResultsPage() {
         title="Your likely coverage path"
         text="CareGuide uses careful language because the state or county makes the official eligibility decision."
       />
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:px-10">
-        <div className="space-y-6">
+      <section className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:px-16">
+        <div className="space-y-8">
           <PathwayCard preview={preview} />
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-x-10 gap-y-8 md:grid-cols-2">
             <InfoPanel title="Why this may fit" items={preview.reasons} />
             <InfoPanel title="What we still need" items={preview.missingInformation} />
             <InfoPanel title="What happens next" items={[preview.nextStep]} />
@@ -445,8 +445,8 @@ export function ResultsPage() {
             <SecondaryButton href="/coverage/help">Talk to a counselor</SecondaryButton>
           </div>
         </div>
-        <aside className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card">
-          <h2 className="text-xl font-extrabold text-navy">Review flags</h2>
+        <aside className="rounded-lg bg-bgsoft p-5">
+          <h2 className="text-xl font-semibold text-navy">Review flags</h2>
           <div className="mt-4 flex flex-wrap gap-2">
             {preview.reviewFlags.map((flag) => (
               <ReviewFlag key={flag}>{flag}</ReviewFlag>
@@ -460,11 +460,13 @@ export function ResultsPage() {
 
 function InfoPanel({ title, items }: { title: string; items: string[] }) {
   return (
-    <section className="rounded-[18px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-[0_10px_28px_rgba(16,32,79,0.06)]">
-      <h2 className="text-xl font-extrabold text-navy">{title}</h2>
+    <section>
+      <h2 className="text-xl font-semibold text-navy">{title}</h2>
       <ul className="mt-4 space-y-3 text-base leading-7 text-slatecare">
         {items.map((item) => (
-          <li key={item}>{item}</li>
+          <li key={item} className="border-l-2 border-[#D9E3F8] pl-4">
+            {item}
+          </li>
         ))}
       </ul>
     </section>
@@ -482,26 +484,30 @@ export function DocumentsPage() {
         title="Let’s prepare your documents"
         text="This checklist is frontend mock state only. Files are not uploaded to a server yet."
       />
-      <section className="mx-auto max-w-5xl space-y-4 px-4 py-8 sm:px-8 lg:px-10">
-        {documentChecklist.map((item) => (
-          <DocumentChecklistItem
-            key={item.id}
-            item={item}
-            added={addedDocuments.includes(item.id)}
-            onAdd={() =>
-              setAddedDocuments((current) => Array.from(new Set([...current, item.id])))
-            }
-            onNeedHelp={() =>
-              setHelpItems((current) => Array.from(new Set([...current, item.id])))
-            }
-          />
-        ))}
+      <section className="mx-auto max-w-5xl px-5 py-10 sm:px-10 lg:px-16">
+        <div className="careguide-soft-card px-5 py-2 sm:px-7">
+          {documentChecklist.map((item) => (
+            <DocumentChecklistItem
+              key={item.id}
+              item={item}
+              added={addedDocuments.includes(item.id)}
+              onAdd={() =>
+                setAddedDocuments((current) => Array.from(new Set([...current, item.id])))
+              }
+              onNeedHelp={() =>
+                setHelpItems((current) => Array.from(new Set([...current, item.id])))
+              }
+            />
+          ))}
+        </div>
         {helpItems.length > 0 ? (
-          <SourceDisclosure>
-            You marked {helpItems.length} item{helpItems.length === 1 ? "" : "s"} for help.
-            CareGuide can prepare questions for a counselor, but it will not contact anyone
-            automatically.
-          </SourceDisclosure>
+          <div className="mt-5">
+            <SourceDisclosure>
+              You marked {helpItems.length} item{helpItems.length === 1 ? "" : "s"} for help.
+              CareGuide can prepare questions for a counselor, but it will not contact anyone
+              automatically.
+            </SourceDisclosure>
+          </div>
         ) : null}
         <div className="flex flex-col gap-3 pt-4 sm:flex-row">
           <PrimaryButton href="/coverage/application">Continue to application</PrimaryButton>
@@ -569,31 +575,31 @@ export function ApplicationPage() {
   };
 
   return (
-    <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:px-10">
+    <section className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:px-16">
       <SidebarProgress
         currentSection={currentSection}
         sections={formSections}
         completedCount={fieldIndex}
       />
 
-      <div className="space-y-5">
-        <div className="rounded-[18px] border border-[rgba(16,32,79,0.10)] bg-white p-4 text-sm font-bold text-slatecare">
+      <div className="space-y-6">
+        <div className="rounded-md bg-bgsoft p-4 text-sm font-medium text-slatecare">
           Coverage application / {currentSection}
         </div>
 
         <FormQuestion field={currentField}>
           <label className="block">
-            <span className="text-sm font-extrabold text-navy">Answer</span>
+            <span className="text-sm font-semibold text-navy">Answer</span>
             <input
               value={answer}
               onChange={(event) => setAnswer(event.target.value)}
-              className="mt-2 min-h-12 w-full rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-4 text-base text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              className="careguide-field mt-2"
             />
           </label>
 
           {voiceSuggestion ? (
-            <div className="mt-5 rounded-[18px] border border-[#B9C9F8] bg-[#EAF0FF] p-4">
-              <p className="text-base font-extrabold text-navy">
+            <div className="mt-5 rounded-lg border border-[#D9E3F8] bg-skysoft p-4">
+              <p className="text-base font-semibold text-navy">
                 You said: {voiceSuggestion}. Use this answer?
               </p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -612,11 +618,11 @@ export function ApplicationPage() {
           ) : null}
         </FormQuestion>
 
-        <section className="rounded-[18px] border border-[#B9C9F8] bg-[#EAF0FF] p-5">
+        <section className="rounded-lg border border-[#D9E3F8] bg-skysoft p-5">
           <div className="grid gap-5 md:grid-cols-[12rem_minmax(0,1fr)] md:items-center">
             <VoiceOrb state={voiceSuggestion ? "processing" : "idle"} />
             <div>
-              <h2 className="text-xl font-extrabold text-navy">Voice help for this question</h2>
+              <h2 className="text-xl font-semibold text-navy">Voice help for this question</h2>
               <p className="mt-2 text-base leading-7 text-slatecare">
                 CareGuide can read the question, listen to an answer, and suggest a value. It will
                 not overwrite a confirmed value or submit a form.
@@ -628,7 +634,7 @@ export function ApplicationPage() {
                     currentField.id === "incomeEstimate" ? "$2,100 per month" : String(answer || "Not sure")
                   )
                 }
-                className="mt-4 inline-flex min-h-12 items-center rounded-xl bg-white px-4 text-base font-extrabold text-primaryDark transition hover:text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                className="mt-4 inline-flex min-h-12 items-center rounded-md bg-white px-4 text-base font-semibold text-primaryDark transition hover:text-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
               >
                 Listen for answer
               </button>
@@ -691,15 +697,15 @@ export function ReviewPage() {
         title="Review your information"
         text="This page prepares a review packet. It does not submit an application."
       >
-        <div className="rounded-[18px] border border-[#B9C9F8] bg-[#EAF0FF] p-5">
-          <p className="text-2xl font-extrabold text-navy">
+        <div className="rounded-lg border border-[#D9E3F8] bg-skysoft p-5">
+          <p className="text-2xl font-semibold text-navy">
             Application packet: {ready ? "Ready for review" : `${flags.length || 3} items need attention`}
           </p>
         </div>
       </PageIntro>
-      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-8 lg:px-10">
-        <div className="overflow-hidden rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white shadow-card">
-          <div className="grid grid-cols-1 border-b border-[rgba(16,32,79,0.08)] bg-[#F4EEE5] px-5 py-3 text-sm font-extrabold text-navy md:grid-cols-4">
+      <section className="mx-auto max-w-6xl px-5 py-10 sm:px-10 lg:px-16">
+        <div className="overflow-hidden rounded-lg border border-[rgba(24,36,71,0.08)] bg-white shadow-soft">
+          <div className="grid grid-cols-1 border-b border-[rgba(24,36,71,0.08)] bg-bgsoft px-5 py-3 text-sm font-semibold text-navy md:grid-cols-4">
             <span>Section</span>
             <span>Answer</span>
             <span>Source</span>
@@ -708,12 +714,12 @@ export function ReviewPage() {
           {fields.map((field) => (
             <div
               key={field.id}
-              className="grid grid-cols-1 gap-2 border-b border-[rgba(16,32,79,0.08)] px-5 py-4 text-base md:grid-cols-4"
+              className="grid grid-cols-1 gap-2 border-b border-[rgba(24,36,71,0.08)] px-5 py-4 text-base md:grid-cols-4"
             >
-              <span className="font-extrabold text-navy">{field.plainLanguageLabel}</span>
+              <span className="font-semibold text-navy">{field.plainLanguageLabel}</span>
               <span className="text-slatecare">{field.value === null ? "Missing" : String(field.value)}</span>
               <span className="text-slatecare">{field.sourceType.replace("_", " ")}</span>
-              <span className="font-extrabold text-primaryDark">
+              <span className="font-semibold text-primaryDark">
                 {field.needsReview ? "Needs review" : "Reviewed"}
               </span>
             </div>
@@ -747,26 +753,26 @@ export function HelpPage() {
         title="Find trusted help nearby"
         text="CareGuide does not call, book, or contact anyone automatically. You choose each next action."
       />
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:px-10">
-        <div className="space-y-5">
-          <section className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card sm:p-7">
-            <h2 className="text-2xl font-extrabold text-navy">Enrollment help</h2>
+      <section className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-10 lg:grid-cols-[minmax(0,1fr)_23rem] lg:px-16">
+        <div className="space-y-8">
+          <section className="careguide-soft-card p-6 sm:p-8">
+            <h2 className="text-2xl font-semibold text-navy">Enrollment help</h2>
             <p className="mt-2 text-base leading-7 text-slatecare">
               Search verified resources when a backend source is connected.
             </p>
             <label className="mt-5 block">
-              <span className="text-sm font-extrabold text-navy">ZIP code</span>
+              <span className="text-sm font-semibold text-navy">ZIP code</span>
               <input
                 value={zip}
                 onChange={(event) => setZip(event.target.value)}
-                className="mt-2 min-h-12 w-full rounded-xl border border-[rgba(16,32,79,0.14)] bg-white px-4 text-base text-navy focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                className="careguide-field mt-2"
               />
             </label>
             <PrimaryButton onClick={() => setSearched(true)}>Search verified resources</PrimaryButton>
           </section>
 
-          <section className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-card sm:p-7">
-            <h2 className="text-2xl font-extrabold text-navy">Care while coverage is pending</h2>
+          <section className="rounded-lg bg-bgsoft p-6 sm:p-8">
+            <h2 className="text-2xl font-semibold text-navy">Care while coverage is pending</h2>
             <p className="mt-2 text-base leading-7 text-slatecare">
               CareGuide can prepare a handoff summary for you to review and share.
             </p>
@@ -809,10 +815,10 @@ export function DashboardPage() {
       <AppHeader />
       <PageIntro
         eyebrow="Saved plan"
-        title="Your CareBridge plan"
+        title="Your CareGuide plan"
         text="A calm place to return to your likely pathway, documents, application packet, and help options."
       />
-      <section className="mx-auto grid max-w-7xl gap-5 px-4 py-8 sm:px-8 md:grid-cols-2 lg:grid-cols-4 lg:px-10">
+      <section className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:px-10 md:grid-cols-2 lg:grid-cols-4 lg:px-16">
         <DashboardStatus title="Likely pathway" value="Demo pathway preview" href="/coverage/results" />
         <DashboardStatus
           title="Application progress"
@@ -830,9 +836,9 @@ export function DashboardPage() {
           href="/coverage/help"
         />
       </section>
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-8 lg:px-10">
-        <div className="rounded-[20px] border border-[rgba(16,32,79,0.10)] bg-white p-6 shadow-card">
-          <h2 className="text-2xl font-extrabold text-navy">Next action</h2>
+      <section className="mx-auto max-w-7xl px-5 pb-16 sm:px-10 lg:px-16">
+        <div className="careguide-soft-card p-6">
+          <h2 className="text-2xl font-semibold text-navy">Next action</h2>
           <p className="mt-2 text-base leading-7 text-slatecare">
             Continue the guided flow or prepare a handoff summary for human review. CareGuide does
             not claim that anything has been filed or sent.
@@ -853,13 +859,13 @@ function DashboardStatus({ title, value, href }: { title: string; value: string;
   return (
     <Link
       href={href}
-      className="group rounded-[18px] border border-[rgba(16,32,79,0.10)] bg-white p-5 shadow-[0_10px_28px_rgba(16,32,79,0.06)] transition hover:-translate-y-0.5 hover:border-primary focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
+      className="group rounded-lg border border-[rgba(24,36,71,0.08)] bg-white p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-[#D9E3F8] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
     >
-      <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-primaryDark">
+      <p className="text-sm font-semibold text-primaryDark">
         {title}
       </p>
-      <p className="mt-4 text-2xl font-extrabold text-navy">{value}</p>
-      <span className="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-primaryDark">
+      <p className="mt-4 text-2xl font-semibold text-navy">{value}</p>
+      <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primaryDark">
         Open
         <span className="transition group-hover:translate-x-1" aria-hidden>
           →

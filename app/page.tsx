@@ -15,8 +15,8 @@ export default function Home() {
       <main>
         <HeroSection />
 
-        <section className="px-4 pb-16 sm:px-8 sm:pb-20 lg:px-10 lg:pb-24">
-          <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-7">
+        <section className="px-5 pb-20 sm:px-10 sm:pb-24 lg:px-16 lg:pb-28">
+          <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             <ActionCard
               icon={<ClipboardHeartIcon className="h-8 w-8" aria-hidden />}
               title="Find Coverage"

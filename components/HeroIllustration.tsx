@@ -4,7 +4,7 @@ export function HeroIllustration() {
       <img
         src="/illustrations/medical-prescription-rafiki.svg"
         alt="Healthcare professional reviewing a medical form"
-        className="h-auto w-full drop-shadow-[0_20px_24px_rgba(17,27,70,0.08)]"
+        className="h-auto w-full drop-shadow-[0_18px_22px_rgba(24,36,71,0.06)]"
       />
     </div>
   );

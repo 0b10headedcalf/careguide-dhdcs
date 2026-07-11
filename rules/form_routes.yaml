@@ -1,0 +1,45 @@
+rules:
+  - id: form_route_ccfrm604_001
+    form_id: CCFRM604
+    reason: Main application for California health coverage.
+    when:
+      any:
+        - field: insurance.needs_health_coverage
+          operator: equals
+          value: true
+        - field: pathway
+          operator: in
+          value: ["medi_cal_likely", "covered_ca_likely", "human_review"]
+  - id: form_route_employer_coverage_001
+    form_id: EMPLOYER_COVERAGE_PREVIEW
+    reason: A CareBridge worksheet helps you gather the employer coverage details the official CCFRM604 application will ask for.
+    when:
+      any:
+        - field: employer.coverage_offer
+          operator: equals
+          value: "yes"
+        - field: employer.coverage_offer
+          operator: equals
+          value: "unknown"
+        - field: employer.coverage_offer
+          operator: missing
+  - id: form_route_income_attestation_001
+    form_id: INCOME_ATTESTATION
+    reason: Income attestation may be needed when documentation is unavailable or income is irregular.
+    when:
+      any:
+        - field: income.documentation_unavailable
+          operator: equals
+          value: true
+        - field: income.type
+          operator: in
+          value: ["irregular", "seasonal", "gig", "cash"]
+  - id: form_route_document_cover_page_001
+    form_id: DOCUMENT_COVER_PAGE
+    reason: Document cover page is used when documents are sent separately.
+    when:
+      any:
+        - field: document.delivery_method
+          operator: in
+          value: ["mail", "fax", "separate_upload"]
+

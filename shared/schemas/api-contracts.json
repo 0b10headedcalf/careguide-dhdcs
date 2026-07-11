@@ -1,0 +1,29 @@
+{
+  "name": "CareBridge CA API contracts",
+  "version": "0.1.0",
+  "basePath": "/api",
+  "endpoints": {
+    "createCase": "POST /api/cases",
+    "getCase": "GET /api/cases/{case_id}",
+    "submitIntakeMessage": "POST /api/intake/message",
+    "confirmCaseFact": "POST /api/intake/confirm",
+    "evaluatePathway": "POST /api/eligibility/evaluate",
+    "routeForms": "POST /api/forms/route",
+    "mapFormFields": "POST /api/forms/map-fields",
+    "verifyPacket": "POST /api/forms/verify",
+    "getNearbyResources": "GET /api/resources/nearby",
+    "createHandoffPassport": "POST /api/handoff-passport",
+    "sourceHealth": "GET /api/source-health",
+    "vapiWebhook": "POST /api/voice/vapi/webhook"
+  },
+  "envelope": {
+    "success": { "data": {}, "meta": { "request_id": "string", "timestamp": "iso-datetime" } },
+    "error": { "error": { "code": "string", "message": "string", "details": {} }, "meta": { "request_id": "string", "timestamp": "iso-datetime" } }
+  },
+  "notes": [
+    "Eligibility is expressed as a likely pathway, never a final eligibility determination.",
+    "Nearby resources are empty when verified public or official sources are unavailable.",
+    "Form field mappings include provenance, confidence, needs_review, risk_level, and explanation_simple."
+  ]
+}
+

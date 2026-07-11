@@ -61,7 +61,7 @@ function VoiceWaveform({ state }: { state: VoiceState }) {
       {waveformBars.map((height, index) => (
         <span
           key={`${height}-${index}`}
-          className="voice-wave-bar w-1 rounded-full bg-[#3F6FF2]"
+          className="voice-wave-bar w-1 rounded-full bg-primaryDark"
           style={
             {
               "--bar-height": `${height}px`,
@@ -129,19 +129,19 @@ export function VoiceInteractionPanel({
   return (
     <section
       aria-labelledby="voice-panel-title"
-      className="mt-6 w-full max-w-[36rem] rounded-[18px] border border-[#B9C9F8] bg-[#EAF0FF] p-6 text-[#10204F] shadow-[0_8px_24px_rgba(63,111,242,0.08)] sm:mt-7 sm:p-7"
+      className="mt-7 w-full max-w-[35rem] rounded-lg border border-[#D9E3F8] bg-skysoft p-6 text-navy shadow-soft sm:mt-8 sm:p-7"
     >
-      <div className="flex min-h-[150px] flex-col justify-between gap-5 sm:min-h-[162px]">
+      <div className="flex min-h-[148px] flex-col justify-between gap-5 sm:min-h-[158px]">
         <div className="flex min-w-0 items-center gap-3">
           <VoiceWaveform state={state} />
-          <h2 id="voice-panel-title" className="text-base font-semibold text-[#10204F] sm:text-lg">
+          <h2 id="voice-panel-title" className="text-base font-semibold text-navy sm:text-lg">
             Guide Agent
           </h2>
         </div>
 
         <p
           aria-live="polite"
-          className={`text-[1.1rem] leading-[1.4] text-[#10204F] transition-opacity duration-300 sm:text-[1.25rem] ${
+          className={`text-[1.08rem] leading-[1.42] text-navy transition-opacity duration-300 sm:text-[1.18rem] ${
             isFading ? "opacity-0" : "opacity-100"
           }`}
         >
@@ -153,7 +153,7 @@ export function VoiceInteractionPanel({
             type="button"
             aria-label="Start conversation"
             onClick={state === "paused" ? onResume : state === "speaking" ? onRetry : onStart}
-            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#3B6BEC] px-6 text-base font-semibold text-white transition-colors hover:bg-[#315ED6] active:bg-[#274EB7] focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-[#3F6FF2] sm:text-lg"
+            className="inline-flex min-h-12 items-center justify-center rounded-md bg-primaryFill px-6 text-base font-semibold text-white transition-colors hover:bg-primaryDark active:bg-primaryActive focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary sm:text-[1.05rem]"
           >
             Start conversation
           </button>
@@ -161,7 +161,7 @@ export function VoiceInteractionPanel({
             type="button"
             aria-label="Type instead"
             onClick={onTypeInstead}
-            className="inline-flex min-h-11 items-center justify-center text-base font-semibold text-[#315ED6] underline-offset-4 hover:underline focus-visible:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-[#3F6FF2]"
+            className="inline-flex min-h-11 items-center justify-center text-base font-semibold text-primaryDark underline-offset-4 hover:underline focus-visible:underline focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
             Type instead
           </button>
