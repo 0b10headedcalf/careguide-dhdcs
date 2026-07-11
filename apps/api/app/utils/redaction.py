@@ -2,12 +2,15 @@ import re
 
 
 SSN_RE = re.compile(r"\b\d{3}-?\d{2}-?\d{4}\b")
+# USCIS Alien Registration Numbers: 8–9 digits, sometimes prefixed with "A".
+A_NUMBER_RE = re.compile(r"(?i)\bA[- ]?\d{8,9}\b")
 LONG_NUMBER_RE = re.compile(r"\b\d{9,}\b")
 API_KEY_RE = re.compile(r"(?i)(api[_-]?key|authorization|token|secret)\s*[:=]\s*[\w\-\.]+")
 
 
 def redact_text(value: str) -> str:
     redacted = SSN_RE.sub("[REDACTED_SSN]", value)
+    redacted = A_NUMBER_RE.sub("[REDACTED_A_NUMBER]", redacted)
     redacted = LONG_NUMBER_RE.sub("[REDACTED_NUMBER]", redacted)
     return API_KEY_RE.sub(r"\1=[REDACTED_SECRET]", redacted)
 
