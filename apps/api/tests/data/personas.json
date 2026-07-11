@@ -1,0 +1,260 @@
+[
+  {
+    "id": "P01",
+    "label": "Single adult, deep poverty, SF",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "94110",
+      "insurance.needs_health_coverage": true,
+      "household.size": 1,
+      "income.estimate": 1200,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P02",
+    "label": "Family of 3 on ~$26k/yr, LA",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "90012",
+      "insurance.needs_health_coverage": true,
+      "household.size": 3,
+      "income.estimate": 2200,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P03",
+    "label": "Single parent, household 2, Fresno",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "93721",
+      "insurance.needs_health_coverage": true,
+      "household.size": 2,
+      "income.estimate": 1800,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P04",
+    "label": "Family of 4 at 112% FPL, San Diego",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "92101",
+      "insurance.needs_health_coverage": true,
+      "household.size": 4,
+      "income.estimate": 3000,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "unknown"
+    }
+  },
+  {
+    "id": "P05",
+    "label": "Family of 5 on $42k/yr, Oakland",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "94601",
+      "insurance.needs_health_coverage": true,
+      "household.size": 5,
+      "income.estimate": 3500,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P06",
+    "label": "Freelancer single, ~230% FPL, SF",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "94103",
+      "insurance.needs_health_coverage": true,
+      "household.size": 1,
+      "income.estimate": 3000,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P07",
+    "label": "Couple at ~$60k/yr, LA",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "90026",
+      "insurance.needs_health_coverage": true,
+      "household.size": 2,
+      "income.estimate": 5000,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P08",
+    "label": "Family of 3 at ~$78k/yr, San Diego",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "92113",
+      "insurance.needs_health_coverage": true,
+      "household.size": 3,
+      "income.estimate": 6500,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "unknown"
+    }
+  },
+  {
+    "id": "P09",
+    "label": "Single adult at ~$54k/yr, San Jose",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "95112",
+      "insurance.needs_health_coverage": true,
+      "household.size": 1,
+      "income.estimate": 4500,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "yes"
+    }
+  },
+  {
+    "id": "P10",
+    "label": "Family of 4 at ~$120k/yr, Sacramento",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "95814",
+      "insurance.needs_health_coverage": true,
+      "household.size": 4,
+      "income.estimate": 10000,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "yes"
+    }
+  },
+  {
+    "id": "P11",
+    "label": "Recently unemployed, family of 3, SF",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "94134",
+      "insurance.needs_health_coverage": true,
+      "insurance.recent_coverage_loss": true,
+      "household.size": 3,
+      "income.estimate": 1500,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P12",
+    "label": "Single tech worker, ~$144k/yr, SF",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "94107",
+      "insurance.needs_health_coverage": true,
+      "household.size": 1,
+      "income.estimate": 12000,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "yes"
+    }
+  },
+  {
+    "id": "P13",
+    "label": "High-income family of 4, San Jose",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "95126",
+      "insurance.needs_health_coverage": true,
+      "household.size": 4,
+      "income.estimate": 18000,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "yes"
+    }
+  },
+  {
+    "id": "P14",
+    "label": "Mixed-status household, family of 4, LA",
+    "expected_category": "mixed_household",
+    "facts": {
+      "location.zip": "90033",
+      "insurance.needs_health_coverage": true,
+      "household.size": 4,
+      "household.has_mixed_immigration_status": true,
+      "income.estimate": 3200,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P15",
+    "label": "Intake: ZIP-only, no household",
+    "expected_category": "human_review",
+    "facts": {
+      "location.zip": "94110",
+      "insurance.needs_health_coverage": true
+    }
+  },
+  {
+    "id": "P16",
+    "label": "Intake: no ZIP",
+    "expected_category": "human_review",
+    "facts": {
+      "insurance.needs_health_coverage": true,
+      "household.size": 2,
+      "income.estimate": 2000,
+      "income.frequency": "monthly"
+    }
+  },
+  {
+    "id": "P17",
+    "label": "Gig worker, no docs, family of 2, SF",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "94124",
+      "insurance.needs_health_coverage": true,
+      "household.size": 2,
+      "income.estimate": 2100,
+      "income.frequency": "monthly",
+      "income.type": "gig",
+      "income.documentation_unavailable": true,
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P18",
+    "label": "Family of 3 with employer offer, mid-income, Oakland",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "94612",
+      "insurance.needs_health_coverage": true,
+      "household.size": 3,
+      "income.estimate": 5500,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "yes"
+    }
+  },
+  {
+    "id": "P19",
+    "label": "Single adult, right at 138% FPL boundary",
+    "expected_category": "covered_ca_likely",
+    "facts": {
+      "location.zip": "94103",
+      "insurance.needs_health_coverage": true,
+      "household.size": 1,
+      "income.estimate": 1810,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  },
+  {
+    "id": "P20",
+    "label": "Family of 8 at low income, Central Valley",
+    "expected_category": "medi_cal_likely",
+    "facts": {
+      "location.zip": "93230",
+      "insurance.needs_health_coverage": true,
+      "household.size": 8,
+      "income.estimate": 5000,
+      "income.frequency": "monthly",
+      "employer.coverage_offer": "no"
+    }
+  }
+]
