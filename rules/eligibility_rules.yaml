@@ -1,27 +1,66 @@
 rules:
-  - id: coverage_need_ca_001
-    description: California resident seeking health coverage
+  - id: medi_cal_income_gate_001
+    description: >
+      Household income appears at or below the Medi-Cal adult MAGI threshold
+      (approximately 138% FPL). Says likely pathway, not eligibility.
     when:
       all:
         - field: location.zip
           operator: exists
-        - field: insurance.needs_health_coverage
-          operator: equals
-          value: true
+        - field: household.size
+          operator: exists
+        - field: income.estimate
+          operator: exists
+        - field: income.frequency
+          operator: exists
+        - field: income.estimate
+          operator: less_than_pct_fpl
+          value: 138
     outcome:
-      pathway: human_review
+      pathway: medi_cal_likely
       explanation_simple: >
-        You may have a California health coverage pathway, but more household
-        and income information must be reviewed before a specific path is prepared.
+        Based on the household and income information you provided, you may be
+        a match for Medi-Cal. The state or county makes the final decision.
+      missing_questions: []
+      verification_flags:
+        - Confirm income documents before handoff.
+      human_review_required: false
+      next_best_action: Continue to document preparation.
+
+  - id: covered_ca_subsidy_range_001
+    description: >
+      Household income is roughly between 138% and 400% FPL — the Covered
+      California subsidy range under current federal rules.
+    when:
+      all:
+        - field: location.zip
+          operator: exists
+        - field: household.size
+          operator: exists
+        - field: income.estimate
+          operator: exists
+        - field: income.frequency
+          operator: exists
+        - field: income.estimate
+          operator: between_pct_fpl
+          value: [138, 400]
+    outcome:
+      pathway: covered_ca_likely
+      explanation_simple: >
+        Based on the household and income you provided, a Covered California
+        plan with financial help may be a match. The final decision is made
+        by Covered California.
       missing_questions:
-        - household.size
-        - income.estimate
-        - income.frequency
-      verification_flags: []
-      human_review_required: true
-      next_best_action: Continue intake and prepare documents for review.
-  - id: household_income_review_001
-    description: Household and income facts are present and need review
+        - employer.coverage_offer
+      verification_flags:
+        - Confirm employer coverage status before handoff.
+      human_review_required: false
+      next_best_action: Continue to employer coverage and document preparation.
+
+  - id: covered_ca_higher_income_001
+    description: >
+      Household income appears above 400% FPL. A Covered California unsubsidized
+      plan may still be a fit; state rules on extended subsidies can vary.
     when:
       all:
         - field: household.size
@@ -30,18 +69,46 @@ rules:
           operator: exists
         - field: income.frequency
           operator: exists
+        - field: income.estimate
+          operator: greater_than_pct_fpl
+          value: 400
     outcome:
-      pathway: medi_cal_likely
+      pathway: covered_ca_likely
       explanation_simple: >
-        Based on the information provided, you may be a match for Medi-Cal.
-        The official state or county review makes the final decision.
+        Based on the household and income you provided, a Covered California
+        plan may be a match. Financial help is less likely at higher incomes;
+        Covered California makes the final decision.
+      missing_questions:
+        - employer.coverage_offer
+      verification_flags:
+        - Higher household income — confirm current federal subsidy rules before handoff.
+      human_review_required: false
+      next_best_action: Continue to employer coverage and document preparation.
+
+  - id: mixed_household_review_001
+    description: >
+      Household indicates mixed immigration status — pathway differs by person
+      and requires human review, since CareBridge CA does not interpret
+      immigration law.
+    when:
+      any:
+        - field: household.has_mixed_immigration_status
+          operator: equals
+          value: true
+    outcome:
+      pathway: mixed_household
+      explanation_simple: >
+        Different members of the household may have different coverage
+        pathways. A certified enrollment counselor should review this.
       missing_questions: []
       verification_flags:
-        - Confirm income documents before handoff.
-      human_review_required: false
-      next_best_action: Continue to document preparation.
-  - id: default_human_review_001
-    description: Default pathway when more facts are needed
+        - Mixed-status household requires human review.
+      human_review_required: true
+      next_best_action: Connect with a certified enrollment counselor.
+
+  - id: intake_needs_zip_001
+    description: >
+      Fallback: ZIP is missing. Cannot produce a location-specific pathway.
     when:
       all:
         - field: location.zip
@@ -49,8 +116,8 @@ rules:
     outcome:
       pathway: human_review
       explanation_simple: >
-        CareBridge CA needs a ZIP code and basic household details before it can
-        prepare a likely pathway.
+        CareBridge CA needs a ZIP code and basic household details before it
+        can prepare a likely pathway.
       missing_questions:
         - location.zip
         - household.size
@@ -60,3 +127,27 @@ rules:
       human_review_required: true
       next_best_action: Ask one intake question at a time.
 
+  - id: intake_incomplete_fallback_001
+    description: >
+      Fallback: ZIP is present but household or income facts are missing.
+    when:
+      any:
+        - field: household.size
+          operator: missing
+        - field: income.estimate
+          operator: missing
+        - field: income.frequency
+          operator: missing
+    outcome:
+      pathway: human_review
+      explanation_simple: >
+        CareBridge CA needs household size and income details before it can
+        prepare a likely pathway.
+      missing_questions:
+        - household.size
+        - income.estimate
+        - income.frequency
+      verification_flags:
+        - Intake is incomplete.
+      human_review_required: true
+      next_best_action: Continue intake and prepare documents for review.

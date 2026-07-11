@@ -6,6 +6,7 @@ from app.core.config import get_settings
 from app.models.pathway import PathwayResult
 from app.rules.loader import load_yaml
 from app.services.case_service import facts_as_dict, get_case_or_404
+from app.services.fpl import pct_of_fpl
 from app.utils.json import dumps_json
 
 
@@ -76,5 +77,21 @@ def _evaluate_clause(clause: dict, facts: dict[str, Any]) -> bool:
         return actual is not None and actual > expected
     if operator == "less_than":
         return actual is not None and actual < expected
+    if operator in ("less_than_pct_fpl", "greater_than_pct_fpl", "between_pct_fpl"):
+        pct = pct_of_fpl(
+            facts.get("income.estimate"),
+            facts.get("income.frequency"),
+            facts.get("household.size"),
+        )
+        if pct is None:
+            return False
+        if operator == "less_than_pct_fpl":
+            return pct < expected
+        if operator == "greater_than_pct_fpl":
+            return pct > expected
+        # between_pct_fpl: expected is [min_inclusive, max_exclusive]
+        if isinstance(expected, list) and len(expected) == 2:
+            return expected[0] <= pct < expected[1]
+        return False
     return False
 
