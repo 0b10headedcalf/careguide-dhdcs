@@ -11,8 +11,8 @@ router = APIRouter()
 
 
 @router.post("/intake/message")
-def intake_message(payload: IntakeMessageRequest, session: Session = Depends(get_session), rid: str = Depends(request_id)):
-    data = submit_intake_message(session, payload.case_id, payload.message, payload.language, payload.input_mode)
+async def intake_message(payload: IntakeMessageRequest, session: Session = Depends(get_session), rid: str = Depends(request_id)):
+    data = await submit_intake_message(session, payload.case_id, payload.message, payload.language, payload.input_mode)
     return success(data, rid)
 
 

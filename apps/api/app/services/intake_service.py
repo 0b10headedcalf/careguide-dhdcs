@@ -7,11 +7,12 @@ from app.core.constants import AUTO_CONFIRM_MIN_CONFIDENCE, HIGH_RISK_FACTS, SUP
 from app.models.intake import IntakeMessage
 from app.services.audit_service import append_audit_event
 from app.services.case_service import facts_as_dict, get_case_or_404, upsert_fact
-from app.services.intake_normalizer import deterministic_case_delta, next_question
+from app.services.intake_normalizer import next_question
+from app.services.llm_gateway import LLMGateway
 from app.utils.redaction import redact_text
 
 
-def submit_intake_message(
+async def submit_intake_message(
     session: Session,
     case_id: str,
     message: str,
@@ -37,7 +38,9 @@ def submit_intake_message(
     session.commit()
     session.refresh(intake_message)
 
-    suggestions = deterministic_case_delta(message, intake_message.id)
+    # DO Gradient agent parses the message; falls back to the deterministic
+    # normalizer inside the gateway when the agent is unconfigured or fails.
+    suggestions = await LLMGateway().extract_case_delta(message, intake_message.id)
     auto_confirmed_names: list[str] = []
     for suggestion in suggestions:
         if _should_auto_confirm(suggestion):

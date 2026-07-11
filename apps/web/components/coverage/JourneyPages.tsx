@@ -43,7 +43,7 @@ import {
 import { useCase } from "@/lib/coverage/case-context";
 import { caseStateFromBackend, nextRouteForState } from "@/lib/coverage/state-machine";
 import { useGeocoder } from "@/lib/coverage/geocode";
-import { useSpeechRecognition } from "@/lib/coverage/speech";
+import { useVoiceRecorder } from "@/lib/coverage/recorder";
 import type {
   CaseDraft,
   DocumentChecklistEntry,
@@ -296,7 +296,7 @@ export function IntakeFlowPage() {
   const entryMode = useEntryMode();
   const question = intakeQuestions[questionIndex];
 
-  const speech = useSpeechRecognition(language, (transcript) => {
+  const speech = useVoiceRecorder(language, (transcript) => {
     setAnswer(transcript);
   });
 
@@ -501,7 +501,7 @@ export function IntakeFlowPage() {
           <VoiceOrb state={voiceState} />
           <button
             type="button"
-            onClick={() => (speech.status === "listening" ? speech.stop() : speech.start())}
+            onClick={() => (speech.status === "listening" ? speech.stop() : void speech.start())}
             disabled={speech.status === "unsupported"}
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-primaryFill px-4 text-base font-extrabold text-white transition hover:bg-primaryDark disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
@@ -742,7 +742,7 @@ export function ApplicationPage() {
   const [attempt, setAttempt] = useState(0);
   const caseIdRef = useRef<string | null>(null);
 
-  const speech = useSpeechRecognition(language, (transcript) => {
+  const speech = useVoiceRecorder(language, (transcript) => {
     setVoiceSuggestion(transcript);
   });
 
@@ -917,7 +917,7 @@ export function ApplicationPage() {
               </p>
               <button
                 type="button"
-                onClick={() => (speech.status === "listening" ? speech.stop() : speech.start())}
+                onClick={() => (speech.status === "listening" ? speech.stop() : void speech.start())}
                 disabled={speech.status === "unsupported"}
                 className="mt-4 inline-flex min-h-12 items-center rounded-xl bg-white px-4 text-base font-extrabold text-primaryDark transition hover:text-primary disabled:cursor-not-allowed disabled:opacity-55 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
               >

@@ -4,6 +4,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.adapters.digitalocean_gradient import DigitalOceanGradientAdapter
 from app.adapters.nvidia_nim import NVIDIANIMAdapter
+from app.core.constants import HIGH_RISK_FACTS
 from app.services.intake_normalizer import deterministic_case_delta, next_question
 
 
@@ -23,9 +24,20 @@ class LLMGateway:
         if not response:
             return deterministic_case_delta(message, message_id)
         try:
-            return [LLMCaseDelta.model_validate(item).model_dump() for item in response.get("case_delta", [])]
+            suggestions = [LLMCaseDelta.model_validate(item) for item in response.get("case_delta", [])]
         except ValidationError:
             return deterministic_case_delta(message, message_id)
+        # Normalize to the same shape deterministic_case_delta produces so the
+        # intake auto-confirm gates apply identically to LLM-sourced facts.
+        return [
+            {
+                **item.model_dump(),
+                "source_type": "agent_suggestion",
+                "source_ref": f"intake_message:{message_id}",
+                "needs_review": item.canonical_name in HIGH_RISK_FACTS,
+            }
+            for item in suggestions
+        ]
 
     async def translate(self, text: str, target_language: str) -> str:
         return text
