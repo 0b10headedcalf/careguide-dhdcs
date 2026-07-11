@@ -12,8 +12,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@carebridge/schemas": ["../../packages/schemas/generated/types.ts"],
-      "@carebridge/schemas/*": ["../../packages/schemas/generated/*"]
+      "@carebridge/schemas": ["../../shared/schemas/generated/types.ts"],
+      "@carebridge/schemas/*": ["../../shared/schemas/generated/*"]
     },
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -30,7 +30,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "../../packages/schemas/generated/**/*.ts"
+    "../../shared/schemas/generated/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

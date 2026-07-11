@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Build context: repo root (so packages/schemas is reachable from apps/web).
+# Build context: repo root (so shared/schemas is reachable from apps/web).
 
 # ---- deps: install node_modules from the lockfile ----
 FROM oven/bun:1 AS deps
@@ -12,7 +12,7 @@ FROM oven/bun:1 AS builder
 WORKDIR /app
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY apps/web ./apps/web
-COPY packages/schemas ./packages/schemas
+COPY shared/schemas ./shared/schemas
 
 WORKDIR /app/apps/web
 
