@@ -1,119 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { HeroIllustration } from "./HeroIllustration";
 import { VoiceTransitionWave } from "./VoiceTransitionWave";
 import {
   VoiceInteractionPanel,
   type VoiceState
 } from "./VoiceInteractionPanel";
+import { useCase } from "@/lib/coverage/case-context";
+import type { Language } from "@/lib/coverage/types";
 
-const userTranscript =
-  "I recently lost my insurance and need help understanding my options.";
-
-function usePrefersReducedMotion() {
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handleChange = () => setReducedMotion(media.matches);
-
-    handleChange();
-    media.addEventListener("change", handleChange);
-
-    return () => media.removeEventListener("change", handleChange);
-  }, []);
-
-  return reducedMotion;
-}
+const EXAMPLE_PROMPTS: Record<Language, string> = {
+  en: "I lost my insurance and need help understanding my options.",
+  es: "Perdí mi seguro y necesito ayuda para entender mis opciones."
+};
 
 export function HeroSection() {
-  const reducedMotion = usePrefersReducedMotion();
-  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
-  const [transcript, setTranscript] = useState("");
-  const [typingOpen, setTypingOpen] = useState(false);
-  const [typedMessage, setTypedMessage] = useState("");
-  const resumeTarget = useRef<VoiceState>("listening");
+  const router = useRouter();
+  const { language, startOrResumeCase } = useCase();
+  const [busy, setBusy] = useState(false);
+  const voiceState: VoiceState = busy ? "processing" : "idle";
 
-  const startVoice = () => {
-    setTypingOpen(false);
-    setTranscript(reducedMotion ? userTranscript : "");
-    setVoiceState("listening");
-  };
-
-  const pauseVoice = () => {
-    if (voiceState !== "paused") {
-      resumeTarget.current = voiceState === "idle" || voiceState === "error" ? "listening" : voiceState;
+  const startConversation = async (mode: "voice" | "text") => {
+    setBusy(true);
+    try {
+      // Creates a new case, or resumes the one already in this browser.
+      await startOrResumeCase();
+    } catch {
+      // Backend unreachable: intake still works from local state and shows
+      // a visible sync notice — never dead-click here.
+    } finally {
+      router.push(`/coverage/intake?mode=${mode}`);
     }
-    setVoiceState("paused");
   };
-
-  const resumeVoice = () => {
-    setVoiceState(resumeTarget.current);
-  };
-
-  const stopVoice = () => {
-    setVoiceState("idle");
-    setTranscript("");
-  };
-
-  const showError = () => {
-    setVoiceState("error");
-  };
-
-  const openTyping = () => {
-    setTypingOpen(true);
-  };
-
-  useEffect(() => {
-    if (voiceState !== "listening") {
-      return;
-    }
-
-    const words = userTranscript.split(" ");
-    const currentWordCount = transcript.length > 0 ? transcript.split(" ").length : 0;
-
-    if (reducedMotion) {
-      setTranscript(userTranscript);
-    } else if (currentWordCount < words.length) {
-      let index = currentWordCount;
-      const transcriptTimer = window.setInterval(() => {
-        index += 1;
-        setTranscript(words.slice(0, index).join(" "));
-
-        if (index >= words.length) {
-          window.clearInterval(transcriptTimer);
-        }
-      }, 260);
-
-      const processingTimer = window.setTimeout(() => {
-        setVoiceState("processing");
-      }, 4200);
-
-      return () => {
-        window.clearInterval(transcriptTimer);
-        window.clearTimeout(processingTimer);
-      };
-    }
-
-    const processingTimer = window.setTimeout(() => {
-      setVoiceState("processing");
-    }, reducedMotion ? 700 : 1200);
-
-    return () => window.clearTimeout(processingTimer);
-  }, [reducedMotion, transcript, voiceState]);
-
-  useEffect(() => {
-    if (voiceState !== "processing") {
-      return;
-    }
-
-    const speakingTimer = window.setTimeout(() => {
-      setVoiceState("speaking");
-    }, reducedMotion ? 600 : 1500);
-
-    return () => window.clearTimeout(speakingTimer);
-  }, [reducedMotion, voiceState]);
 
   return (
     <section className="px-4 pb-10 pt-10 sm:px-8 sm:pb-14 sm:pt-14 lg:px-10 lg:pb-16 lg:pt-16">
@@ -146,17 +66,11 @@ export function HeroSection() {
 
           <VoiceInteractionPanel
             state={voiceState}
-            transcript={transcript}
-            typingOpen={typingOpen}
-            typedMessage={typedMessage}
-            onStart={startVoice}
-            onPause={pauseVoice}
-            onResume={resumeVoice}
-            onStop={stopVoice}
-            onRetry={startVoice}
-            onError={showError}
-            onTypeInstead={openTyping}
-            onTypedMessageChange={setTypedMessage}
+            busy={busy}
+            errorMessage={null}
+            examplePrompt={EXAMPLE_PROMPTS[language]}
+            onStart={() => void startConversation("voice")}
+            onTypeInstead={() => void startConversation("text")}
           />
         </div>
 

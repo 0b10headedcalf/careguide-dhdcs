@@ -1,11 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import {
-  ArrowRightIcon,
-  ChevronDownIcon,
-  HeartIcon,
-  MicIcon
-} from "@/components/icons";
+import { LanguageMenu } from "@/components/Header";
+import { ArrowRightIcon, HeartIcon, MicIcon } from "@/components/icons";
 import type {
   DocumentChecklistEntry,
   FormFieldValue,
@@ -39,6 +38,7 @@ export function getCurrentStep(pathname: string) {
 }
 
 export function AppHeader() {
+  const router = useRouter();
   return (
     <header className="border-b border-[rgba(16,32,79,0.10)] bg-cream/95 px-4 py-4 sm:px-8 lg:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -64,16 +64,10 @@ export function AppHeader() {
           className="flex flex-wrap items-center gap-2 text-sm font-bold text-navy"
           aria-label="Coverage flow controls"
         >
+          <LanguageMenu align="right" />
           <button
             type="button"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 transition hover:bg-white/70 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
-            aria-label="Change language"
-          >
-            English
-            <ChevronDownIcon className="h-4 w-4" aria-hidden />
-          </button>
-          <button
-            type="button"
+            onClick={() => router.push("/coverage/intake?mode=voice")}
             className="inline-flex min-h-11 items-center rounded-xl px-3 transition hover:bg-white/70 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-primary"
           >
             Voice mode
@@ -385,7 +379,7 @@ export function PathwayCard({ preview }: { preview: PathwayPreview }) {
   return (
     <section className="rounded-[22px] border border-[#B9C9F8] bg-[#EAF0FF] p-6 shadow-card sm:p-8">
       <p className="text-sm font-extrabold uppercase tracking-[0.12em] text-primaryDark">
-        Demo pathway preview
+        Likely pathway preview
       </p>
       <h1 className="mt-3 font-editorial text-[2.2rem] font-semibold leading-tight text-navy sm:text-[3rem]">
         {preview.label}
@@ -418,11 +412,13 @@ export function DocumentChecklistItem({
           </p>
         </div>
         <span className="inline-flex min-h-9 items-center self-start rounded-full bg-[#EAF0FF] px-3 text-sm font-extrabold text-primaryDark">
-          {added ? "Added" : item.status}
+          {added ? "Ready" : item.status}
         </span>
       </div>
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-        <SecondaryButton onClick={onAdd}>{added ? "Replace file" : "Upload file"}</SecondaryButton>
+        <SecondaryButton onClick={onAdd}>
+          {added ? "Marked as ready" : "I have this ready"}
+        </SecondaryButton>
         <button
           type="button"
           onClick={onNeedHelp}
@@ -596,6 +592,14 @@ export function ResourceCard({ resource }: { resource?: ResourceSearchResult }) 
       ) : null}
       {resource.distance ? (
         <p className="mt-1 text-sm text-slatecare">{resource.distance}</p>
+      ) : null}
+      {resource.reasonRecommended ? (
+        <p className="mt-2 text-sm leading-6 text-slatecare">{resource.reasonRecommended}</p>
+      ) : null}
+      {resource.languageSupport?.length ? (
+        <p className="mt-1 text-sm text-slatecare">
+          Verified language support: {resource.languageSupport.join(", ")}
+        </p>
       ) : null}
       <div className="mt-3">
         <SourceBadge

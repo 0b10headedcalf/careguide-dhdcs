@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4 } from "next/font/google";
+import { CaseProvider } from "@/lib/coverage/case-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${sourceSerif.variable}`}>
-        {children}
+        <CaseProvider>{children}</CaseProvider>
       </body>
     </html>
   );

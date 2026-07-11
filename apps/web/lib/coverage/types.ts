@@ -14,6 +14,8 @@ export interface CaseDraft {
   employerCoverageOffer?: "yes" | "no" | "unknown";
   needsCareNow?: boolean;
   confirmedFields: string[];
+  /** User attestations about documents ("have" / "need_help"). Never implies upload. */
+  docStatus?: Record<string, "have" | "need_help">;
 }
 
 export interface FormFieldValue {
@@ -65,5 +67,7 @@ export interface ResourceSearchResult {
   sourceUrl?: string;
   /** Human-readable source label, e.g. "HRSA", "DataSF". */
   sourceId?: string;
+  /** Why the backend recommends this resource, when provided by the source. */
+  reasonRecommended?: string;
 }
 

@@ -1,45 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ResourceCard } from "./FlowComponents";
-import { fetchNearbyResources } from "@/lib/coverage/api";
+import { ErrorNotice } from "./ErrorNotice";
 import type { ResourceSearchResult } from "@/lib/coverage/types";
 
-type LoadStatus = "idle" | "loading" | "empty" | "error";
+type LoadStatus = "idle" | "loading" | "empty" | "error" | "success";
 
-export function OfficialResourcesList({ zip }: { zip: string }) {
-  const [resources, setResources] = useState<ResourceSearchResult[]>([]);
-  const [status, setStatus] = useState<LoadStatus>("idle");
-
-  useEffect(() => {
-    const trimmed = zip.trim();
-    if (!trimmed) {
-      setResources([]);
-      setStatus("idle");
-      return;
-    }
-
-    let cancelled = false;
-    setStatus("loading");
-    setResources([]);
-
-    fetchNearbyResources(trimmed).then((list) => {
-      if (cancelled) return;
-      setResources(list);
-      setStatus(list.length === 0 ? "empty" : "idle");
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [zip]);
-
+/**
+ * Presents verified backend resources. Fetching is owned by the parent so
+ * other controls (phone list, counselor panel) can reuse the same real data.
+ */
+export function OfficialResourcesList({
+  zip,
+  status,
+  resources,
+  error,
+  onRetry
+}: {
+  zip: string;
+  status: LoadStatus;
+  resources: ResourceSearchResult[];
+  error: unknown;
+  onRetry: () => void;
+}) {
   if (status === "loading") {
     return (
       <p className="rounded-xl border border-[rgba(16,32,79,0.10)] bg-white p-4 text-sm font-semibold text-navy">
         Looking up verified resources near {zip}…
       </p>
     );
+  }
+
+  if (status === "error") {
+    return <ErrorNotice error={error} onRetry={onRetry} />;
   }
 
   if (status === "empty") {
@@ -59,14 +52,6 @@ export function OfficialResourcesList({ zip }: { zip: string }) {
           directly.
         </p>
       </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <p className="rounded-xl border border-[rgba(16,32,79,0.10)] bg-white p-4 text-sm font-semibold text-navy">
-        Could not reach the verified-resources service. Try again in a moment.
-      </p>
     );
   }
 
