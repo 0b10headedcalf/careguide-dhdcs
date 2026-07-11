@@ -1,0 +1,45 @@
+# Deploys the app defined in .do/app.yaml to DigitalOcean App Platform on
+# every push to main. Unlike DO's built-in `deploy_on_push: true` — which
+# only redeploys services that are already provisioned — this action reads
+# the current .do/app.yaml and syncs the whole app spec, so adding a new
+# service (e.g. the `api` service alongside `web`) actually creates it on
+# the next push instead of being silently ignored.
+#
+# Prerequisites:
+#   1. A DigitalOcean API token with App Platform read+write scope.
+#   2. That token stored as a repo secret named DIGITALOCEAN_ACCESS_TOKEN
+#      (Settings -> Secrets and variables -> Actions -> New repository secret).
+#   3. The app must exist on DO once. If .do/app.yaml has `name: careguide`,
+#      the action will find the app by name and update it in place. If no
+#      matching app exists, it creates one from the spec.
+
+name: Deploy to DigitalOcean App Platform
+
+on:
+  push:
+    branches: [main]
+  # Also allow manual runs from the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Prevent overlapping deploys if multiple pushes land quickly.
+  group: do-app-platform-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy app spec to App Platform
+        uses: digitalocean/app_action/deploy@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          # app_spec_location defaults to .do/app.yaml, which is where our
+          # spec already lives. Leaving it default keeps this workflow in
+          # sync with any future edits to that file.
