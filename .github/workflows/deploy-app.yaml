@@ -46,6 +46,11 @@ jobs:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           DIGITALOCEAN_AGENT_ENDPOINT: ${{ secrets.DIGITALOCEAN_AGENT_ENDPOINT }}
           DIGITALOCEAN_AGENT_ENDPOINT_KEY: ${{ secrets.DIGITALOCEAN_AGENT_ENDPOINT_KEY }}
+          GRADIENT_AGENT_ENDPOINT: ${{ secrets.GRADIENT_AGENT_ENDPOINT }}
+          GRADIENT_AGENT_ACCESS_KEY: ${{ secrets.GRADIENT_AGENT_ACCESS_KEY }}
+          CAREBRIDGE_SECRET_KEY: ${{ secrets.CAREBRIDGE_SECRET_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY }}
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           # app_spec_location defaults to .do/app.yaml, which is where our

@@ -38,7 +38,7 @@ class DigitalOceanGradientAdapter:
         if not endpoint or not key:
             return None
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(90, connect=10)) as client:
                 response = await client.post(
                     f"{endpoint}/api/v1/chat/completions",
                     headers={"Authorization": f"Bearer {key}"},

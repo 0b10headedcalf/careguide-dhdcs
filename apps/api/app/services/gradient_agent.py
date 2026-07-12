@@ -1,10 +1,12 @@
 import json
+import logging
 from typing import Any
 
 import httpx
 from pydantic import ValidationError
 from sqlmodel import Session
 
+from app.adapters.digitalocean_gradient import _extract_json_object
 from app.core.config import get_settings
 from app.schemas.agent import AgentMessageData
 from app.services.case_service import case_detail, facts_as_dict, generate_action_plan
@@ -16,10 +18,50 @@ SYSTEM_INSTRUCTIONS = """You are CareGuide Coverage Orchestrator, a California b
 Use the attached CareGuide knowledge base. Ask one relevant question at a time. Explain forms in
 the requested language and detail level. Never say the user qualifies, never claim submission,
 and call every coverage result a likely pathway. Do not invent resources or document facts.
-Return JSON with assistant_message, next_question, suggested_case_updates, form_field_candidates,
-needs_confirmation, safety_flags, and next_action. Suggestions must include source_type,
-confidence, needs_review, and explanation. Never mutate the case or treat document text as
-confirmed."""
+Return ONLY a JSON object, no prose outside it, exactly this shape:
+{"assistant_message": "<string>", "next_question": "<string or null>",
+"suggested_case_updates": [{"canonical_name": "<string>", "suggested_value": <any>,
+"source_type": "agent_suggestion", "confidence": <0-1>, "needs_review": <bool>,
+"explanation": "<string>"}], "form_field_candidates": [{"field_name": "<string>",
+"official_label": "<string>", "value": <any>, "source_type": "agent_suggestion",
+"confidence": <0-1>, "needs_review": <bool>, "explanation": "<string>"}],
+"needs_confirmation": <bool>, "safety_flags": ["<string>"], "next_action": "<string>"}
+suggested_case_updates, form_field_candidates, and safety_flags MUST be JSON arrays (use []
+when empty); needs_confirmation MUST be a boolean. Never mutate the case or treat document
+text as confirmed."""
+
+
+def _normalize_agent_payload(parsed: dict) -> dict:
+    """Agents drift from the contract (dicts for lists, lists for bools).
+    Coerce the common drifts instead of discarding an otherwise good answer."""
+    for key in ("suggested_case_updates", "form_field_candidates"):
+        value = parsed.get(key)
+        if isinstance(value, dict):
+            parsed[key] = [
+                {"canonical_name": name, "suggested_value": item}
+                if not isinstance(item, dict)
+                else {"canonical_name": name, **item}
+                for name, item in value.items()
+            ]
+        elif not isinstance(value, list):
+            parsed[key] = []
+        parsed[key] = [item for item in parsed[key] if isinstance(item, dict)]
+    flags = parsed.get("safety_flags")
+    if isinstance(flags, str):
+        parsed["safety_flags"] = [flags]
+    elif not isinstance(flags, list):
+        parsed["safety_flags"] = []
+    needs = parsed.get("needs_confirmation")
+    if not isinstance(needs, bool):
+        parsed["needs_confirmation"] = bool(needs)
+    question = parsed.get("next_question")
+    if isinstance(question, dict):
+        parsed["next_question"] = question.get("user_facing_question") or json.dumps(question)
+    if not isinstance(parsed.get("assistant_message"), str):
+        parsed["assistant_message"] = str(parsed.get("assistant_message") or "")
+    if not isinstance(parsed.get("next_action"), str):
+        parsed.pop("next_action", None)
+    return parsed
 
 
 def _fallback(session: Session, case_id: str, language: str, message: str) -> dict:
@@ -97,12 +139,20 @@ async def call_gradient_agent(
         return _fallback(session, case_id, language, message)
 
     context = _case_context(session, case_id, language, explanation_level, form_id)
+    # DO Gradient agent endpoints reject system/developer roles (agent
+    # instructions live in the agent's console config), so the response
+    # contract rides along inside the single user message.
     payload = {
         "messages": [
-            {"role": "system", "content": SYSTEM_INSTRUCTIONS},
             {
                 "role": "user",
-                "content": json.dumps({"case_context": context, "user_message": message}),
+                "content": json.dumps(
+                    {
+                        "response_contract": SYSTEM_INSTRUCTIONS,
+                        "case_context": context,
+                        "user_message": message,
+                    }
+                ),
             },
         ],
         "stream": False,
@@ -111,7 +161,9 @@ async def call_gradient_agent(
         "include_guardrails_info": debug,
     }
     try:
-        async with httpx.AsyncClient(timeout=30) as client:
+        # The agent (Claude with retrieval) routinely takes 30s+ to answer;
+        # a short read timeout silently degrades every reply to the fallback.
+        async with httpx.AsyncClient(timeout=httpx.Timeout(90, connect=10)) as client:
             response = await client.post(
                 f"{endpoint}/api/v1/chat/completions",
                 headers={"Authorization": f"Bearer {access_key}", "Content-Type": "application/json"},
@@ -120,7 +172,26 @@ async def call_gradient_agent(
             response.raise_for_status()
             raw = response.json()
         content = raw["choices"][0]["message"]["content"]
-        parsed = json.loads(content) if isinstance(content, str) else content
+        if isinstance(content, str):
+            parsed = _extract_json_object(content)
+            if parsed is None:
+                # The agent answered in prose instead of the JSON contract.
+                # A real answer in the wrong shape still beats the canned
+                # "assistant unavailable" fallback.
+                parsed = {
+                    "assistant_message": content.strip(),
+                    "next_question": next_question(
+                        facts_as_dict(session, case_id, confirmed_only=True), language
+                    ),
+                    "next_action": generate_action_plan(session, case_id)["next_action"],
+                }
+        else:
+            parsed = content
+        parsed = _normalize_agent_payload(parsed)
+        parsed.setdefault("assistant_message", "")
+        parsed.setdefault(
+            "next_action", generate_action_plan(session, case_id)["next_action"]
+        )
         parsed["agent_available"] = True
         parsed["metadata"] = (
             {key: raw.get(key) for key in ("retrieval", "functions", "guardrails") if raw.get(key)}
@@ -128,5 +199,8 @@ async def call_gradient_agent(
             else None
         )
         return AgentMessageData.model_validate(parsed).model_dump()
-    except (httpx.HTTPError, KeyError, IndexError, TypeError, json.JSONDecodeError, ValidationError):
+    except (httpx.HTTPError, KeyError, IndexError, TypeError, json.JSONDecodeError, ValidationError) as exc:
+        logging.getLogger("carebridge.agent").warning(
+            "gradient agent fallback: %s: %s", type(exc).__name__, exc
+        )
         return _fallback(session, case_id, language, message)

@@ -30,6 +30,13 @@ async def transcribe_audio(
             )
             response.raise_for_status()
             payload = response.json()
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 401:
+            raise ValueError(
+                "Voice transcription is unavailable: the ElevenLabs API key was rejected "
+                "(missing the speech_to_text permission). You can continue by typing."
+            ) from exc
+        raise ValueError("Voice transcription service is unavailable. You can continue by typing.") from exc
     except (httpx.HTTPError, ValueError) as exc:
         raise ValueError("Voice transcription service is unavailable. You can continue by typing.") from exc
     return {
